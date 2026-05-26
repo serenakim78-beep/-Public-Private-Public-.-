@@ -456,7 +456,7 @@
   .stat-bar-label {
     font-size: 12px;
     color: var(--text2);
-    width: 90px;
+    width: 110px;
     flex-shrink: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -578,6 +578,33 @@
     transition: all 0.15s;
   }
   .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  /* DATE PICKER RANGE PANEL */
+  .custom-range-panel {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: slideUp 0.2s ease;
+  }
+  .range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .range-inputs input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 13px;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+  }
 
   /* RECORD LIST */
   .record-item {
@@ -854,6 +881,16 @@
       <button class="filter-chip" onclick="setStatsFilter(this,'today')">오늘</button>
       <button class="filter-chip" onclick="setStatsFilter(this,'week')">이번주</button>
       <button class="filter-chip" onclick="setStatsFilter(this,'month')">이번달</button>
+      <button class="filter-chip" onclick="setStatsFilter(this,'custom')">기간 지정</button>
+    </div>
+
+    <div class="custom-range-panel" id="customRangePanel" style="display:none;">
+      <span class="input-label" style="margin-bottom:2px; font-weight:700; color:var(--primary);">조회 기간 직접 선택</span>
+      <div class="range-inputs">
+        <input type="date" id="statsStartDate" onchange="renderStats()">
+        <span style="font-size:13px; color:var(--text2)">~</span>
+        <input type="date" id="statsEndDate" onchange="renderStats()">
+      </div>
     </div>
 
     <div id="statsContent"></div>
@@ -935,6 +972,10 @@ function init() {
   
   document.getElementById('dtDate').value = dateStr;
   document.getElementById('dtTime').value = timeStr;
+  
+  // 통계 디폴트 날짜를 오늘로 우선 매핑
+  document.getElementById('statsStartDate').value = dateStr;
+  document.getElementById('statsEndDate').value = dateStr;
   
   state.data.date = dateStr;
   state.data.time = timeStr;
@@ -1133,4 +1174,390 @@ function selectDiaperCat(el, catValue) {
     state.data.diaperCat = catValue;
     state.data.diaperType = '';
     state.data.finalDiaperName = '';
-    document.getElementById('custom
+    document.getElementById('customDiaperName').value = '';
+  }
+  validateCurrentScreen();
+}
+
+// ─── DYNAMIC POPULATE ───────────────────────────────────────
+function populateDiaperTypes() {
+  const grid = document.getElementById('diaperTypeGrid');
+  const subTitle = document.getElementById('screen3Sub');
+  const customInputWrap = document.getElementById('customDiaperInputWrap');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+  const cat = state.data.diaperCat;
+  subTitle.textContent = `[${cat}]의 세부 종류를 선택해 주세요.`;
+
+  const list = diaperTypes[cat] || [];
+  if (list.length === 0) {
+    grid.innerHTML = '<div class="empty-state">등록된 상세 종류가 없습니다.</div>';
+    return;
+  }
+
+  list.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'option-card';
+    if (state.data.diaperType === item.name) card.classList.add('selected');
+    
+    card.onclick = function() {
+      selectOption(this, 'diaperType', item.name);
+      
+      if (item.name === '자가') {
+        customInputWrap.style.display = 'block';
+        document.getElementById('customDiaperName').focus();
+      } else {
+        customInputWrap.style.display = 'none';
+      }
+      validateCurrentScreen();
+    };
+
+    card.innerHTML = `
+      <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="card-name" style="text-align:left; font-size:13px;">${item.name}</div>
+    `;
+    grid.appendChild(card);
+  });
+
+  if (state.data.diaperType === '자가') {
+    customInputWrap.style.display = 'block';
+  } else {
+    customInputWrap.style.display = 'none';
+  }
+
+  validateCurrentScreen();
+}
+
+// ─── QUANTITY CONTROL ─────────────────────────────────────────
+function changeQty(amount) {
+  const display = document.getElementById('qtyDisplay');
+  let current = parseInt(display.value) || 1;
+  current += amount;
+  if (current < 1) current = 1;
+  if (current > 99) current = 99;
+  display.value = current;
+  state.data.qty = current;
+  updateReviewPanel();
+  validateCurrentScreen();
+}
+
+function setQty(val) {
+  const display = document.getElementById('qtyDisplay');
+  display.value = val;
+  state.data.qty = val;
+  updateReviewPanel();
+  validateCurrentScreen();
+}
+
+function validateQty() {
+  const display = document.getElementById('qtyDisplay');
+  let val = parseInt(display.value);
+  if (isNaN(val) || val < 1) val = 1;
+  if (val > 99) val = 99;
+  state.data.qty = val;
+  updateReviewPanel();
+  validateCurrentScreen();
+}
+
+// ─── REVIEW PANEL ─────────────────────────────────────────────
+function updateReviewPanel() {
+  if (state.data.diaperType === '자가') {
+    const customValue = document.getElementById('customDiaperName').value.trim();
+    state.data.finalDiaperName = `자가 (${customValue})`;
+  } else {
+    state.data.finalDiaperName = state.data.diaperType;
+  }
+  
+  let pInfo = state.data.patientName || '-';
+  let subInfo = [];
+  if (state.data.patientId) subInfo.push(state.data.patientId);
+  if (state.data.roomNo) subInfo.push(state.data.roomNo);
+  if (subInfo.length > 0) pInfo += ` (${subInfo.join(' / ')})`;
+
+  document.getElementById('rev-patient').textContent = pInfo;
+  document.getElementById('rev-diaper').textContent = state.data.finalDiaperName ? `${state.data.finalDiaperName} / ${state.data.qty}개` : '-';
+  document.getElementById('rev-dept').textContent = state.data.dept || '-';
+  document.getElementById('rev-staff').textContent = state.data.staffName ? `${state.data.staffName} (${state.data.staffType})` : '-';
+}
+
+// ─── SAVE & LOCALSTORAGE ──────────────────────────────────────
+let recordsList = [];
+
+function loadRecords() {
+  const stored = localStorage.getItem('diaper_records');
+  if (stored) {
+    try {
+      recordsList = JSON.parse(stored);
+    } catch(e) {
+      recordsList = [];
+    }
+  }
+}
+
+function saveRecord() {
+  if (!canProceed()) return;
+  
+  state.data.staffName = document.getElementById('staffName').value.trim();
+
+  const newRecord = {
+    id: Date.now(),
+    ...state.data,
+    qty: parseInt(state.data.qty)
+  };
+  
+  recordsList.unshift(newRecord);
+  localStorage.setItem('diaper_records', JSON.stringify(recordsList));
+
+  const summaryBox = document.getElementById('successSummary');
+  if (summaryBox) {
+    let pInfo = newRecord.patientName;
+    let subInfo = [];
+    if (newRecord.patientId) subInfo.push(newRecord.patientId);
+    if (newRecord.roomNo) subInfo.push(newRecord.roomNo);
+    if (subInfo.length > 0) pInfo += ` (${subInfo.join('/')})`;
+
+    summaryBox.innerHTML = `
+      <div class="info-row"><span class="info-key">일시</span><span class="info-val">${newRecord.date} ${newRecord.time}</span></div>
+      <div class="info-row"><span class="info-key">환자/부서</span><span class="info-val">${pInfo} [${newRecord.dept}]</span></div>
+      <div class="info-row"><span class="info-key">종류/수량</span><span class="info-val" style="color:var(--primary)">${newRecord.finalDiaperName} / ${newRecord.qty}개</span></div>
+    `;
+  }
+  
+  goTo(8);
+}
+
+function resetForm() {
+  state.data.dept = '';
+  state.data.staffType = '';
+  state.data.staffName = '';
+  state.data.patientName = '';
+  state.data.patientId = '';
+  state.data.roomNo = '';
+  state.data.diaperCat = '';
+  state.data.diaperType = '';
+  state.data.finalDiaperName = '';
+  state.data.qty = 1;
+
+  const nameInput = document.getElementById('staffName');
+  nameInput.value = '';
+  nameInput.disabled = true;
+  nameInput.placeholder = "유형을 먼저 선택해 주세요";
+
+  document.getElementById('patientName').value = '';
+  document.getElementById('patientId').value = '';
+  document.getElementById('roomNo').value = '';
+  document.getElementById('qtyDisplay').value = 1;
+  document.getElementById('customDiaperName').value = '';
+  document.getElementById('customDiaperInputWrap').style.display = 'none';
+  
+  document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('headerSub').textContent = "요양병원 스마트 기록 시스템";
+  init();
+  goTo(1);
+}
+
+// ─── STATISTICS & FILTERS ────────────────────────────────────
+function showStats() {
+  document.getElementById('headerSub').textContent = "사용 통계 분석";
+  loadRecords();
+  goTo(9);
+  renderStats();
+}
+
+function hideStats() {
+  document.getElementById('headerSub').textContent = "요양병원 스마트 기록 시스템";
+  goTo(1); 
+}
+
+function switchStatsTab(el, tabName) {
+  document.querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  state.statsTab = tabName;
+  renderStats();
+}
+
+function setStatsFilter(el, filterRange) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  state.statsFilter = filterRange;
+  
+  // 'custom' 필터일 때만 기간 입력 패널 노출
+  const rangePanel = document.getElementById('customRangePanel');
+  if (filterRange === 'custom') {
+    rangePanel.style.display = 'block';
+  } else {
+    rangePanel.style.display = 'none';
+  }
+  
+  renderStats();
+}
+
+function getFilteredRecords() {
+  const now = new Date();
+  return recordsList.filter(r => {
+    const rDate = new Date(r.date);
+    
+    if (state.statsFilter === 'all') return true;
+    
+    if (state.statsFilter === 'today') {
+      return rDate.toDateString() === now.toDateString();
+    }
+    if (state.statsFilter === 'week') {
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      return rDate >= oneWeekAgo;
+    }
+    if (state.statsFilter === 'month') {
+      return rDate.getMonth() === now.getMonth() && rDate.getFullYear() === now.getFullYear();
+    }
+    if (state.statsFilter === 'custom') {
+      const startInput = document.getElementById('statsStartDate').value;
+      const endInput = document.getElementById('statsEndDate').value;
+      if (!startInput || !endInput) return true;
+      
+      const startDate = new Date(startInput);
+      const endDate = new Date(endInput);
+      
+      // 시간 단위를 제외한 날짜 비교를 위해 오프셋 처리
+      rDate.setHours(0,0,0,0);
+      startDate.setHours(0,0,0,0);
+      endDate.setHours(0,0,0,0);
+      
+      return rDate >= startDate && rDate <= endDate;
+    }
+    return true;
+  });
+}
+
+function renderStats() {
+  const filtered = getFilteredRecords();
+  const content = document.getElementById('statsContent');
+  const totalSub = document.getElementById('statsTotalSub');
+  
+  const totalQty = filtered.reduce((sum, r) => sum + r.qty, 0);
+  totalSub.textContent = `필터링된 기록: 총 ${filtered.length}건 (사용량: ${totalQty}개)`;
+
+  if (filtered.length === 0) {
+    content.innerHTML = `
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <div class="empty-title">기록이 없습니다</div>
+        <div class="empty-desc">선택한 조건에 맞는 데이터가 없습니다.</div>
+      </div>`;
+    return;
+  }
+
+  if (state.statsTab === 'overview') {
+    const counts = {};
+    // 변경 지점: 카테고리(diaperCat)가 아닌 실제 명칭(finalDiaperName)으로 세부 집계
+    filtered.forEach(r => { 
+      const name = r.finalDiaperName || r.diaperType || '미지정';
+      counts[name] = (counts[name] || 0) + r.qty; 
+    });
+    content.innerHTML = createStatCard("기저귀 종류별 상세 사용량", counts, 'accent');
+  } 
+  else if (state.statsTab === 'patient') {
+    const counts = {};
+    filtered.forEach(r => { counts[r.patientName] = (counts[r.patientName] || 0) + r.qty; });
+    content.innerHTML = createStatCard("환자별 기저귀 누적 사용량", counts, 'warn');
+  } 
+  else if (state.statsTab === 'dept') {
+    const counts = {};
+    filtered.forEach(r => { counts[r.dept] = (counts[r.dept] || 0) + r.qty; });
+    content.innerHTML = createStatCard("병동 부서별 사용량", counts, '');
+  } 
+  else if (state.statsTab === 'records') {
+    let html = '';
+    filtered.forEach(r => {
+      let dotColor = '#2563EB';
+      if(r.diaperCat === '겉기저귀') dotColor = '#10B981';
+      if(r.diaperCat === '속기저귀') dotColor = '#F59E0B';
+      if(r.diaperCat === '위생깔개매트') dotColor = '#EF4444';
+
+      let pExtra = [];
+      if (r.patientId) pExtra.push(r.patientId);
+      if (r.roomNo) pExtra.push(r.roomNo);
+      const extraStr = pExtra.length > 0 ? ` [${pExtra.join('/')}]` : '';
+
+      html += `
+        <div class="record-item">
+          <div class="record-dot" style="background:${dotColor}"></div>
+          <div class="record-main">
+            <div class="record-patient">${r.patientName}${extraStr}<span class="ward-badge">${r.dept}</span></div>
+            <div class="record-meta">${r.date} ${r.time} | ${r.staffName}(${r.staffType})</div>
+            <div class="record-meta" style="color:var(--text); font-weight:500; margin-top:2px;">${r.finalDiaperName || r.diaperType}</div>
+          </div>
+          <div class="record-qty">${r.qty}<span>개</span></div>
+        </div>`;
+    });
+    content.innerHTML = html;
+  }
+}
+
+function createStatCard(title, dataObj, colorClass) {
+  const arr = Object.keys(dataObj).map(key => ({ name: key, count: dataObj[key] }));
+  arr.sort((a, b) => b.count - a.count);
+
+  const max = arr.length > 0 ? arr[0].count : 1;
+  let rowsHtml = '';
+
+  arr.forEach(item => {
+    const pct = Math.round((item.count / max) * 100);
+    rowsHtml += `
+      <div class="stat-bar-row">
+        <div class="stat-bar-label" title="${item.name}">${item.name}</div>
+        <div class="stat-bar-track">
+          <div class="stat-bar-fill ${colorClass}" style="width: ${pct}%"></div>
+        </div>
+        <div class="stat-bar-count">${item.count}</div>
+      </div>`;
+  });
+
+  return `
+    <div class="stat-card">
+      <div class="stat-card-header">
+        <div class="stat-card-title">${title}</div>
+        <div class="stat-badge">종류별 집계</div>
+      </div>
+      ${rowsHtml}
+    </div>`;
+}
+
+// ─── EXPORT CSV ──────────────────────────────────────────────
+function exportCSV() {
+  const filtered = getFilteredRecords();
+  if (filtered.length === 0) return alert('내보낼 기록이 없습니다.');
+
+  let csvContent = "\uFEFF"; 
+  csvContent += "날짜,시간,부서,직원유형,직원이름,환자이름,환자번호,병실,기저귀구분,세부종류,수량\n";
+
+  filtered.forEach(r => {
+    const diaperNameDisplay = r.finalDiaperName || r.diaperType;
+    const row = [
+      r.date, r.time, r.dept, r.staffType, r.staffName,
+      r.patientName, r.patientId || '-', r.roomNo || '-', r.diaperCat, `"${diaperNameDisplay}"`, r.qty
+    ];
+    csvContent += row.join(",") + "\n";
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  
+  link.setAttribute("href", url);
+  link.setAttribute("download", `기저귀_사용기록_통계_${dateStr}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
