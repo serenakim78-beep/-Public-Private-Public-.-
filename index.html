@@ -882,7 +882,7 @@ const state = {
   statsFilter: 'all'
 };
 
-// ─── DIAPER DATA (정확한 오타 교정 완료) ───────────────────────
+// ─── DIAPER DATA (모든 카테고리 정확한 오타 및 텍스트 교정 완료) ───
 const diaperTypes = {
   '팬티형기저귀': [
     { name: '국산 서림 시그널라인 언더웨어 중형 흡수율780 중형' },
@@ -897,16 +897,16 @@ const diaperTypes = {
     { name: '자가' }
   ],
   '겉기저귀': [
-    { name: '중국 포린트 겉기저귀 제작 테이닝형 대형 성인용 600 대형' },
-    { name: '중국 이지귀 콘드 성인용 기저귀 중형 흡수율 750 중형' },
+    { name: '중국 포인트 겉기저귀 매직 테이프형 대형 흡수율 600 대형' },
+    { name: '중국 이지스 골드 성인용 기저귀 중형 흡수율 750 중형' },
     { name: '자가' }
   ],
   '속기저귀': [
-    { name: '중국 포린트 일자형 속기저귀 보통 사이즈 보통' },
+    { name: '중국 포인트 일자형 속기저귀 보통 사이즈 보통' },
     { name: '자가' }
   ],
   '위생깔개매트': [
-    { name: '중국 포린트 위생깔개 게매 대형 사이즈 다형' },
+    { name: '중국 포인트 위생깔개 매트 대형 사이즈 대형' },
     { name: '자가' }
   ]
 };
@@ -936,7 +936,7 @@ function updateDateDisplay() {
   const days = ['일','월','화','수','목','금','토'];
   document.getElementById('dtDateDisp').textContent =
     `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
-  document.getElementById('dtTimeDisp').textContent = state.data.time;
+  document.getElementById('dtTimeDisp').textContent = timeStr = state.data.time;
 }
 
 document.getElementById('dtDate').addEventListener('input', function() {
@@ -966,6 +966,7 @@ function goTo(screenNum) {
   window.scrollTo(0, 0);
 }
 
+// 기존 로직 변동 없음 (생략/유지)
 function updateProgress() {
   const pf = document.getElementById('progressFill');
   const sl = document.getElementById('stepLabel');
@@ -1039,7 +1040,6 @@ function goNext() {
     state.data.patientId = document.getElementById('patientId').value.trim();
   }
   if (state.currentScreen === 6) {
-    // '자가' 선택 후 텍스트를 직접 썼다면 최종 데이터 가공 후 적용
     if (state.data.diaperType === '자가') {
       const customValue = document.getElementById('customDiaperName').value.trim();
       state.data.finalDiaperName = `자가 (${customValue})`;
@@ -1107,7 +1107,7 @@ function selectDiaperCat(el, catValue) {
     state.data.diaperCat = catValue;
     state.data.diaperType = '';
     state.data.finalDiaperName = '';
-    document.getElementById('customDiaperName').value = ''; // 초기화
+    document.getElementById('customDiaperName').value = '';
   }
   validateCurrentScreen();
 }
@@ -1137,7 +1137,6 @@ function populateDiaperTypes() {
     card.onclick = function() {
       selectOption(this, 'diaperType', item.name);
       
-      // '자가' 카드를 선택했을 때 주관식 텍스트 입력창 노출 여부 조절
       if (item.name === '자가') {
         customInputWrap.style.display = 'block';
         document.getElementById('customDiaperName').focus();
@@ -1154,7 +1153,6 @@ function populateDiaperTypes() {
     grid.appendChild(card);
   });
 
-  // 이전 단계로 왔을 때 기존 '자가' 선택 처리 유지용
   if (state.data.diaperType === '자가') {
     customInputWrap.style.display = 'block';
   } else {
@@ -1428,7 +1426,6 @@ function exportCSV() {
   document.body.removeChild(link);
 }
 
-// ─── RUN INIT ON LOAD ──────────────────────────────────────────
 window.onload = init;
 </script>
 </body>
