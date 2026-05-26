@@ -1,75 +1,1577 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>기저귀 관리 시스템</title>
-    <style>
-        /* CSS 생략 (제공해주신 스타일 그대로 사용 가능) */
-        body { font-family: sans-serif; background: #EFF6FF; margin: 0; padding-bottom: 80px; }
-        .screen { display: none; padding: 20px; }
-        .screen.active { display: block; }
-        .bottom-bar { position: fixed; bottom: 0; width: 100%; max-width: 480px; display: flex; padding: 20px; background: white; border-top: 1px solid #ddd; gap: 10px; }
-        button { flex: 1; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-next { background: #2563EB; color: white; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>기저귀 사용 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #2563EB;
+    --primary-light: #EFF6FF;
+    --primary-dark: #1D4ED8;
+    --accent: #10B981;
+    --accent-light: #ECFDF5;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --surface: #FFFFFF;
+    --surface2: #F8FAFC;
+    --border: #E2E8F0;
+    --text: #0F172A;
+    --text2: #64748B;
+    --text3: #94A3B8;
+    --shadow: 0 4px 24px rgba(37,99,235,0.10);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #EFF6FF;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* APP SHELL */
+  #app {
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--primary);
+    color: white;
+    padding: 18px 20px 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(37,99,235,0.25);
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .header-sub {
+    font-size: 12px;
+    opacity: 0.8;
+    margin-top: 2px;
+  }
+  .header-btn {
+    background: rgba(255,255,255,0.18);
+    border: none;
+    color: white;
+    border-radius: 8px;
+    padding: 8px 13px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    transition: background 0.18s;
+  }
+  .header-btn:active { background: rgba(255,255,255,0.3); }
+  .header-btn.nav-back { background: var(--accent); }
+  .header-btn.nav-back:active { background: #059669; }
+
+  /* STEP PROGRESS */
+  .step-progress {
+    background: var(--primary);
+    padding: 0 20px 14px;
+  }
+  .progress-track {
+    background: rgba(255,255,255,0.25);
+    border-radius: 100px;
+    height: 4px;
+    width: 100%;
+    overflow: hidden;
+  }
+  .progress-fill {
+    background: white;
+    height: 100%;
+    border-radius: 100px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .step-label {
+    color: rgba(255,255,255,0.85);
+    font-size: 11px;
+    margin-top: 6px;
+    font-weight: 500;
+  }
+
+  /* SCREENS */
+  .screen {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    padding: 24px 20px 100px;
+    animation: slideUp 0.32s cubic-bezier(0.4,0,0.2,1);
+  }
+  .screen.active { display: flex; }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .screen-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .screen-sub {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  /* OPTION CARDS */
+  .option-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .option-grid.single { grid-template-columns: 1fr; }
+  .option-grid.triple { grid-template-columns: 1fr 1fr 1fr; }
+  .option-card {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.18s;
+    background: var(--surface2);
+    position: relative;
+    overflow: hidden;
+  }
+  .option-card:active { transform: scale(0.97); }
+  .option-card.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  }
+  .option-card .card-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .option-card .card-desc {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .option-card.selected .card-name { color: var(--primary); }
+  .check-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 18px;
+    height: 18px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .option-card.selected .check-badge { display: flex; }
+  .check-badge svg { width: 10px; height: 10px; }
+
+  /* TEXT INPUT */
+  .input-wrap {
+    margin-bottom: 16px;
+  }
+  .input-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .text-input {
+    width: 100%;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: 15px;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: var(--text);
+    background: var(--surface2);
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  .text-input:focus {
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+  }
+  .text-input::placeholder { color: var(--text3); }
+  .text-input:disabled { background: #E2E8F0; color: var(--text3); cursor: not-allowed; border-color: var(--border); }
+
+  /* QUANTITY PICKER */
+  .qty-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--surface2);
+  }
+  .qty-btn {
+    width: 56px;
+    height: 60px;
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    font-weight: 300;
+    color: var(--primary);
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .qty-btn:active { background: var(--primary-light); }
+  .qty-display {
+    flex: 1;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .qty-presets {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .qty-preset {
+    flex: 1;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text2);
+    background: var(--surface2);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .qty-preset:active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+
+  /* DATETIME DISPLAY */
+  .datetime-card {
+    background: var(--primary);
+    border-radius: var(--radius);
+    padding: 20px;
+    color: white;
+    margin-bottom: 20px;
+  }
+  .dt-date {
+    font-size: 15px;
+    opacity: 0.85;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .dt-time {
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: -1px;
+  }
+  .dt-edit {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+  }
+  .dt-edit input {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 8px;
+    color: white;
+    padding: 14px 12px;
+    font-size: 15px;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+    flex: 1;
+  }
+  .dt-edit input::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+  /* INFO CARD (review) */
+  .info-card {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-key { font-size: 13px; color: var(--text2); font-weight: 500; }
+  .info-val { font-size: 13px; color: var(--text); font-weight: 600; }
+
+  /* BOTTOM BUTTONS */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    padding: 12px 20px 24px;
+    background: white;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    z-index: 200;
+  }
+  .btn-back {
+    border: 2px solid var(--border);
+    background: white;
+    border-radius: var(--radius-sm);
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text2);
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-back:active { background: var(--surface2); }
+  .btn-next {
+    flex: 1;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.18s;
+    box-shadow: 0 4px 14px rgba(37,99,235,0.28);
+    letter-spacing: -0.3px;
+  }
+  .btn-next:active { transform: scale(0.98); background: var(--primary-dark); }
+  .btn-next:disabled { background: var(--border); color: var(--text3); box-shadow: none; cursor: not-allowed; }
+  .btn-save {
+    flex: 1;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.18s;
+    box-shadow: 0 4px 14px rgba(16,185,129,0.28);
+    letter-spacing: -0.3px;
+  }
+  .btn-save:active { transform: scale(0.98); }
+
+  /* STATS SCREEN */
+  .stats-tabs {
+    display: flex;
+    gap: 0;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .stats-tab {
+    flex: 1;
+    padding: 10px 6px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    background: var(--surface2);
+    border: none;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.15s;
+  }
+  .stats-tab.active { background: var(--primary); color: white; }
+
+  .stat-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 12px;
+    background: white;
+  }
+  .stat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .stat-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .stat-badge {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .stat-badge.category-badge {
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .stat-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .stat-bar-label {
+    font-size: 12px;
+    color: var(--text2);
+    width: 110px;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .stat-bar-track {
+    flex: 1;
+    background: var(--border);
+    border-radius: 100px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .stat-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: var(--primary);
+    transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+  .stat-bar-fill.accent { background: var(--accent); }
+  .stat-bar-fill.warn { background: var(--warning); }
+  .stat-bar-fill.danger { background: var(--danger); }
+  .stat-bar-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    width: 24px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* SUCCESS */
+  .success-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .success-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--accent-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .success-icon svg { color: var(--accent); }
+  .success-title { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: var(--text2); line-height: 1.7; }
+  .success-summary {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 20px 0;
+    text-align: left;
+    width: 100%;
+  }
+  .success-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 8px;
+  }
+  .btn-outline {
+    flex: 1;
+    border: 2px solid var(--primary);
+    background: white;
+    color: var(--primary);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-outline:active { background: var(--primary-light); }
+  .btn-primary-solid {
+    flex: 1;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.15s;
+  }
+
+  /* FILTER BAR */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .filter-chip {
+    flex: 1;
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    background: white;
+    cursor: pointer;
+    white-space: nowrap;
+    text-align: center;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all 0.15s;
+  }
+  .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  /* DATE PICKER RANGE PANEL (TOP FIXED) */
+  .custom-range-panel {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .range-inputs input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 13px;
+    font-family: 'Noto Sans KR', sans-serif;
+    outline: none;
+    background: white;
+  }
+
+  /* RECORD LIST */
+  .record-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    background: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .record-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .record-main { flex: 1; min-width: 0; }
+  .record-patient {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .record-meta {
+    font-size: 11px;
+    color: var(--text2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .record-qty {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--primary);
+    flex-shrink: 0;
+  }
+  .record-qty span { font-size: 11px; font-weight: 500; color: var(--text2); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text3);
+  }
+  .empty-state svg { opacity: 0.35; margin-bottom: 12px; }
+  .empty-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .empty-desc { font-size: 13px; }
+
+  /* WARD BADGE */
+  .ward-badge {
+    display: inline-block;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+
+  /* SCROLLBAR HIDE */
+  .filter-row::-webkit-scrollbar { display: none; }
+  
+  /* LOADING INDICATOR */
+  .loading-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 999; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); }
+</style>
 </head>
 <body>
-    <div id="app">
-        <div id="screen1" class="screen active"><h3>환자 정보</h3><input type="text" id="patientName" placeholder="이름"></div>
-        <div id="screen2" class="screen"><h3>기저귀 구분</h3></div>
-        <div class="bottom-bar">
-            <button onclick="goBack()">이전</button>
-            <button class="btn-next" id="btnNext" onclick="handleNext()">다음</button>
-        </div>
+<div id="app">
+  <div class="loading-overlay" id="loadingOverlay">구글 시트 동기화 중...</div>
+
+  <div class="header">
+    <div class="header-row">
+      <div>
+        <div class="header-title">기저귀 사용 관리</div>
+        <div class="header-sub" id="headerSub">요양병원 스마트 기록 시스템</div>
+      </div>
+      <button class="header-btn" id="headerActionBtn" onclick="toggleMainStats()">통계 보기</button>
+    </div>
+  </div>
+
+  <div class="step-progress" id="stepProgress">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:14%"></div>
+    </div>
+    <div class="step-label" id="stepLabel">1단계 / 7단계</div>
+  </div>
+
+  <div class="screen active" id="screen1">
+    <div class="screen-title">사용 환자</div>
+    <div class="screen-sub">기저귀를 사용한 환자의 정보를 모두 입력해 주세요. (모든 칸 작성 필수)</div>
+    <div class="input-wrap">
+      <span class="input-label">환자 이름</span>
+      <input type="text" class="text-input" id="patientName" placeholder="홍길동" oninput="filterKorean(this); validateScreen1();" style="font-size:20px;font-weight:700;">
+    </div>
+    <div class="input-wrap">
+      <span class="input-label">환자 번호</span>
+      <input type="text" class="text-input" id="patientId" placeholder="예: 12345" oninput="filterNumber(this); validateScreen1();">
+    </div>
+    <div class="input-wrap">
+      <span class="input-label">병실</span>
+      <input type="text" class="text-input" id="roomNo" placeholder="예: 301" oninput="filterNumber(this); validateScreen1();">
+    </div>
+  </div>
+
+  <div class="screen" id="screen2">
+    <div class="screen-title">기저귀 구분</div>
+    <div class="screen-sub">사용한 기저귀 종류를 선택해 주세요.</div>
+    <div class="option-grid single">
+      <div class="option-card" onclick="selectDiaperCat(this,'팬티형기저귀')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">팬티형 기저귀</div>
+        <div class="card-desc">팬티처럼 착용하는 성인용 기저귀</div>
+      </div>
+      <div class="option-card" onclick="selectDiaperCat(this,'겉기저귀')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">겉 기저귀</div>
+        <div class="card-desc">테이프형 일반 기저귀</div>
+      </div>
+      <div class="option-card" onclick="selectDiaperCat(this,'속기저귀')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">속 기저귀</div>
+        <div class="card-desc">기저귀 안에 사용하는 속 패드</div>
+      </div>
+      <div class="option-card" onclick="selectDiaperCat(this,'위생깔개매트')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">위생 깔개 매트</div>
+        <div class="card-desc">침대 방수 매트</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen3">
+    <div class="screen-title">기저귀 종류</div>
+    <div class="screen-sub" id="screen3Sub">세부 종류를 선택해 주세요.</div>
+    <div class="option-grid single" id="diaperTypeGrid" style="margin-bottom:16px;"></div>
+    <div class="input-wrap" id="customDiaperInputWrap" style="display:none; animation: slideUp 0.2s ease;">
+      <span class="input-label" style="color:var(--primary); font-weight:700;">자가 기저귀 명칭 직접 입력</span>
+      <input type="text" class="text-input" id="customDiaperName" placeholder="사용한 기저귀 명칭을 직접 입력하세요. (한글만)" oninput="filterKorean(this); validateCustomDiaper();">
+    </div>
+  </div>
+
+  <div class="screen" id="screen4">
+    <div class="screen-title">사용 갯수</div>
+    <div class="screen-sub">사용한 기저귀 수량을 입력해 주세요.</div>
+    <div class="qty-wrap">
+      <button class="qty-btn" onclick="changeQty(-1)">-</button>
+      <input type="number" class="qty-display" id="qtyDisplay" value="1" min="1" max="99" oninput="validateQty()">
+      <button class="qty-btn" onclick="changeQty(1)">+</button>
+    </div>
+    <div class="qty-presets">
+      <button class="qty-preset" onclick="setQty(1)">1개</button>
+      <button class="qty-preset" onclick="setQty(2)">2개</button>
+      <button class="qty-preset" onclick="setQty(3)">3개</button>
+      <button class="qty-preset" onclick="setQty(5)">5개</button>
+      <button class="qty-preset" onclick="setQty(10)">10개</button>
+    </div>
+    <div class="info-card" style="margin-top:24px;">
+      <div class="screen-title" style="font-size:15px;margin-bottom:12px;">현재 입력 내용 확인</div>
+      <div class="info-row"><span class="info-key">환자</span><span class="info-val" id="rev-patient">-</span></div>
+      <div class="info-row"><span class="info-key">기저귀</span><span class="info-val" id="rev-diaper">-</span></div>
+      <div class="info-row"><span class="info-key">부서</span><span class="info-val" id="rev-dept">-</span></div>
+      <div class="info-row"><span class="info-key">직원</span><span class="info-val" id="rev-staff">-</span></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen5">
+    <div class="screen-title">날짜 및 시간</div>
+    <div class="screen-sub">기저귀 사용 날짜와 시간을 확인해 주세요.</div>
+    <div class="datetime-card">
+      <div class="dt-date" id="dtDateDisp"></div>
+      <div class="dt-time" id="dtTimeDisp"></div>
+      <div class="dt-edit">
+        <input type="date" id="dtDate">
+        <input type="time" id="dtTime">
+      </div>
+    </div>
+    <div class="input-wrap">
+      <span class="input-label">현재 시간으로 자동 설정됩니다. 수정이 필요하면 위에서 변경하세요.</span>
+    </div>
+  </div>
+
+  <div class="screen" id="screen6">
+    <div class="screen-title">사용 부서 선택</div>
+    <div class="screen-sub">환자가 있는 병동을 선택해 주세요.</div>
+    <div class="option-grid">
+      <div class="option-card" onclick="selectOption(this,'dept','2A병동')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">2A병동</div>
+      </div>
+      <div class="option-card" onclick="selectOption(this,'dept','2B병동')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">2B병동</div>
+      </div>
+      <div class="option-card" onclick="selectOption(this,'dept','3A병동')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">3A병동</div>
+      </div>
+      <div class="option-card" onclick="selectOption(this,'dept','3B병동')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">3B병동</div>
+      </div>
+      <div class="option-card" onclick="selectOption(this,'dept','5병동')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">5병동</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen7">
+    <div class="screen-title">입력 직원 유형</div>
+    <div class="screen-sub">기저귀를 제공하는 직원 유형을 선택해 주세요.</div>
+    <div class="option-grid single">
+      <div class="option-card" onclick="selectStaffTypeOption(this,'행정직원')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">행정직원</div>
+        <div class="card-desc">병동 행정 담당자</div>
+      </div>
+      <div class="option-card" onclick="selectStaffTypeOption(this,'병동직원')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">병동직원</div>
+        <div class="card-desc">병동 근무 담당 직원</div>
+      </div>
+      <div class="option-card" onclick="selectStaffTypeOption(this,'간병사')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">간병사</div>
+        <div class="card-desc">환자 직접 간병 담당</div>
+      </div>
+    </div>
+    <div class="input-wrap" style="margin-top:16px">
+      <span class="input-label">직원 이름</span>
+      <input type="text" class="text-input" id="staffName" placeholder="유형을 먼저 선택해 주세요" disabled oninput="filterKorean(this); validateScreen7();">
+    </div>
+  </div>
+
+  <div class="screen" id="screen8">
+    <div class="success-wrap">
+      <div class="success-icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <polyline points="8,20 16,28 32,12" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="success-title">저장 완료!</div>
+      <div class="success-sub">기저귀 사용 기록이<br>성공적으로 저장되었습니다.</div>
+      <div class="success-summary" id="successSummary"></div>
+      <div class="success-actions">
+        <button class="btn-outline" onclick="showStats()">통계 보기</button>
+        <button class="btn-primary-solid" onclick="resetForm()">새로 입력</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen9">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="screen-title">통계</div>
+      <button onclick="exportCSV()" style="border:none;background:var(--primary-light);color:var(--primary);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;">CSV 내보내기</button>
+    </div>
+    <div class="screen-sub" id="statsTotalSub">전체 기록 0건</div>
+
+    <div class="stats-tabs">
+      <button class="stats-tab active" onclick="switchStatsTab(this,'overview')">전체 현황</button>
+      <button class="stats-tab" onclick="switchStatsTab(this,'patient')">환자별</button>
+      <button class="stats-tab" onclick="switchStatsTab(this,'dept')">부서별</button>
+      <button class="stats-tab" onclick="switchStatsTab(this,'records')">기록 목록</button>
     </div>
 
-    <script>
-        // ⚠️ 아래 주소를 본인의 정확한 웹 앱 URL로 바꾸세요
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbxQ1VHT1qbop8KavwnzhgwoL6Hb14qubYfv6jxrtvqFFMgySmmc354GN2-AjhcEgWv9/exec';
-        
-        let currentScreen = 1;
-        const totalScreens = 7;
+    <div class="custom-range-panel" id="customRangePanel">
+      <span class="input-label" style="margin-bottom:2px; font-weight:700; color:var(--primary);">조회 기간 직접 선택</span>
+      <div class="range-inputs">
+        <input type="date" id="statsStartDate" onchange="syncCustomFilterState(); renderStats();">
+        <span style="font-size:13px; color:var(--text2)">~</span>
+        <input type="date" id="statsEndDate" onchange="syncCustomFilterState(); renderStats();">
+      </div>
+    </div>
 
-        function goBack() {
-            if (currentScreen > 1) {
-                document.getElementById('screen' + currentScreen).classList.remove('active');
-                currentScreen--;
-                document.getElementById('screen' + currentScreen).classList.add('active');
-            }
-        }
+    <div class="filter-row" id="statsFilter">
+      <button class="filter-chip" id="chip-today" onclick="setStatsFilter(this,'today')">오늘</button>
+      <button class="filter-chip" id="chip-week" onclick="setStatsFilter(this,'week')">이번주</button>
+      <button class="filter-chip" id="chip-month" onclick="setStatsFilter(this,'month')">이번달</button>
+      <button class="filter-chip active" id="chip-all" onclick="setStatsFilter(this,'all')">전체</button>
+    </div>
 
-        function handleNext() {
-            if (currentScreen < totalScreens) {
-                document.getElementById('screen' + currentScreen).classList.remove('active');
-                currentScreen++;
-                document.getElementById('screen' + currentScreen).classList.add('active');
-            } else {
-                saveData();
-            }
-        }
+    <div id="statsContent"></div>
+  </div>
 
-        async function saveData() {
-            const data = {
-                name: document.getElementById('patientName').value,
-                // 나머지 데이터 추가
-            };
-            
-            document.getElementById('btnNext').innerText = "저장 중...";
-            try {
-                await fetch(scriptURL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    cache: 'no-cache',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                alert('저장되었습니다.');
-                location.reload();
-            } catch (e) {
-                alert('저장 실패');
-            }
-        }
-    </script>
+  <div class="bottom-bar" id="bottomBar">
+    <button class="btn-back" id="btnBack" onclick="goBack()">이전</button>
+    <button class="btn-next" id="btnNext" onclick="goNext()">다음</button>
+  </div>
+</div>
+
+<script>
+// ─── 구글 웹 앱 URL 주소 연동 설정 ───────────────────────
+// ⚠️ 발급받으신 본인의 구글 웹 앱 배포 URL 주소를 아래 작은따옴표 사이에 넣어주세요.
+const scriptURL = 'YOUR_URL';https://script.google.com/macros/s/AKfycbxQ1VHT1qbop8KavwnzhgwoL6Hb14qubYfv6jxrtvqFFMgySmmc354GN2-AjhcEgWv9/exec
+
+// ─── STATE ────────────────────────────────────────────────
+const state = {
+  currentScreen: 1,
+  totalScreens: 7,
+  data: {
+    date: '',
+    time: '',
+    dept: '',
+    staffType: '',
+    staffName: '',
+    patientName: '',
+    patientId: '',
+    roomNo: '',
+    diaperCat: '',
+    diaperType: '',
+    qty: 1
+  },
+  statsTab: 'overview',
+  statsFilter: 'all',
+  serverRecords: [] // 구글 시트 백엔드에서 실시간 조회해온 기록 저장용
+};
+
+// ─── DIAPER DATA ───
+const diaperTypes = {
+  '팬티형기저귀': [
+    { name: '국산 서림 시그널라인 언더웨어 중형 흡수율780 중형' },
+    { name: '국산 서림 시그널라인 언더웨어 대형 흡수율 800 대형' },
+    { name: '국산 서림 시그널라인 언더웨어 특대형 흡수율 880 특대형' },
+    { name: '타이완 테나 프로스킨 언더웨어 중형 흡수율 1,000 중형' },
+    { name: '태국 라이프리 안심 언더웨어 중형 흡수율 850 중형' },
+    { name: '태국 라이프리 안심 언더웨어 대형 흡수율 850 중형' },
+    { name: '국산 유한킴벌리 디펜드 스타일 언더웨어 중형 흡수율 400 중형' },
+    { name: '중국 휴먼스토리 팬티 언더웨어 대형 흡수율 1200 대형' },
+    { name: '국산 유한킴벌리 디펜드 안심 언더웨어 대형 흡수율 1200 대형' },
+    { name: '자가' }
+  ],
+  '겉기저귀': [
+    { name: '중국 포인트 겉기저귀 매직 테이프형 대형 흡수율 600 대형' },
+    { name: '중국 이지스 골드 성인용 기저귀 중형 흡수율 750 중형' },
+    { name: '자가' }
+  ],
+  '속기저귀': [
+    { name: '중국 포인트 일자형 속기저귀 보통 사이즈 보통' },
+    { name: '자가' }
+  ],
+  '위생깔개매트': [
+    { name: '중국 포인트 위생깔개 매트 대형 사이즈 대형' },
+    { name: '자가' }
+  ]
+};
+
+// ─── INPUT FILTER FUNCTIONS ───
+function filterKorean(el) {
+  el.value = el.value.replace(/[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/g, '');
+}
+function filterNumber(el) {
+  el.value = el.value.replace(/[^0-9]/g, '');
+}
+
+// ─── INIT ────────────────────────────────────────────────
+window.onload = function() {
+  init();
+};
+
+function init() {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const dateStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  
+  document.getElementById('dtDate').value = dateStr;
+  document.getElementById('dtTime').value = timeStr;
+  
+  document.getElementById('statsStartDate').value = dateStr;
+  document.getElementById('statsEndDate').value = dateStr;
+  
+  state.data.date = dateStr;
+  state.data.time = timeStr;
+  
+  updateDateDisplay();
+  updateProgress();
+  updateBottomBar();
+  loadRecordsFromServer(); // 구글 클라우드에서 실시간 데이터 로드
+}
+
+function updateDateDisplay() {
+  if (!state.data.date || !state.data.time) return;
+  const d = new Date(state.data.date + 'T' + state.data.time);
+  const days = ['일','월','화','수','목','금','토'];
+  document.getElementById('dtDateDisp').textContent =
+    `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+  document.getElementById('dtTimeDisp').textContent = state.data.time;
+}
+
+document.getElementById('dtDate').addEventListener('input', function() {
+  state.data.date = this.value;
+  updateDateDisplay();
+  validateCurrentScreen();
+});
+document.getElementById('dtTime').addEventListener('input', function() {
+  state.data.time = this.value;
+  updateDateDisplay();
+  validateCurrentScreen();
+});
+
+// ─── NAVIGATION ───────────────────────────────────────────
+function goTo(screenNum) {
+  for (let i = 1; i <= 9; i++) {
+    const s = document.getElementById('screen' + i);
+    if (s) s.classList.remove('active');
+  }
+  const target = document.getElementById('screen' + screenNum);
+  if (target) target.classList.add('active');
+  state.currentScreen = screenNum;
+  
+  updateProgress();
+  updateBottomBar();
+  updateHeaderButton();
+  window.scrollTo(0, 0);
+}
+
+function updateProgress() {
+  const pf = document.getElementById('progressFill');
+  const sl = document.getElementById('stepLabel');
+  const sp = document.getElementById('stepProgress');
+
+  if (state.currentScreen === 8 || state.currentScreen === 9) {
+    sp.style.display = 'none';
+    return;
+  }
+  sp.style.display = '';
+
+  const pct = Math.round((state.currentScreen / state.totalScreens) * 100);
+  pf.style.width = pct + '%';
+  sl.textContent = `${state.currentScreen}단계 / ${state.totalScreens}단계`;
+}
+
+function updateBottomBar() {
+  const bb = document.getElementById('bottomBar');
+  if (state.currentScreen === 8 || state.currentScreen === 9) {
+    bb.style.display = 'none';
+    return;
+  }
+  bb.style.display = 'flex';
+
+  const btnBack = document.getElementById('btnBack');
+  const btnNext = document.getElementById('btnNext');
+
+  btnBack.style.display = state.currentScreen === 1 ? 'none' : 'block';
+
+  if (state.currentScreen === state.totalScreens) {
+    btnNext.textContent = '등록 완료';
+    btnNext.className = 'btn-save';
+  } else {
+    btnNext.textContent = '다음';
+    btnNext.className = 'btn-next';
+  }
+  validateCurrentScreen();
+}
+
+function updateHeaderButton() {
+  const btn = document.getElementById('headerActionBtn');
+  if (state.currentScreen === 9) {
+    btn.textContent = '입력창으로';
+    btn.className = 'header-btn nav-back';
+  } else {
+    btn.textContent = '통계 보기';
+    btn.className = 'header-btn';
+  }
+}
+
+function toggleMainStats() {
+  if (state.currentScreen === 9) {
+    goTo(1);
+  } else {
+    showStats();
+  }
+}
+
+function goBack() {
+  if (state.currentScreen > 1) {
+    goTo(state.currentScreen - 1);
+  }
+}
+
+function goNext() {
+  if (state.currentScreen === state.totalScreens) {
+    saveDataToGoogleSheets(); // 데이터 저장 트리거 교체
+  } else {
+    if (state.currentScreen === 2) {
+      renderDiaperTypes();
+    }
+    if (state.currentScreen === 3) {
+      updateReviewSummary();
+    }
+    goTo(state.currentScreen + 1);
+  }
+}
+
+// ─── VALIDATION ──────────────────────────────────────────
+function validateCurrentScreen() {
+  const btn = document.getElementById('btnNext');
+  if (!btn) return;
+  
+  let valid = false;
+  switch(state.currentScreen) {
+    case 1:
+      valid = validateScreen1();
+      break;
+    case 2:
+      valid = !!state.data.diaperCat;
+      break;
+    case 3:
+      if (state.data.diaperType === '자가') {
+        valid = document.getElementById('customDiaperName').value.trim().length >= 2;
+      } else {
+        valid = !!state.data.diaperType;
+      }
+      break;
+    case 4:
+      valid = parseInt(state.data.qty) > 0;
+      break;
+    case 5:
+      valid = !!state.data.date && !!state.data.time;
+      break;
+    case 6:
+      valid = !!state.data.dept;
+      break;
+    case 7:
+      valid = validateScreen7();
+      break;
+    default:
+      valid = true;
+  }
+  btn.disabled = !valid;
+}
+
+function validateScreen1() {
+  const name = document.getElementById('patientName').value.trim();
+  const id = document.getElementById('patientId').value.trim();
+  const room = document.getElementById('roomNo').value.trim();
+  
+  state.data.patientName = name;
+  state.data.patientId = id;
+  state.data.roomNo = room;
+  
+  return name.length >= 2 && id.length >= 3 && room.length >= 3;
+}
+
+function validateCustomDiaper() {
+  validateCurrentScreen();
+}
+
+function validateQty() {
+  const el = document.getElementById('qtyDisplay');
+  let v = parseInt(el.value);
+  if (isNaN(v) || v < 1) v = 1;
+  if (v > 99) v = 99;
+  el.value = v;
+  state.data.qty = v;
+  updateReviewSummary();
+  validateCurrentScreen();
+}
+
+function validateScreen7() {
+  const name = document.getElementById('staffName').value.trim();
+  state.data.staffName = name;
+  return !!state.data.staffType && name.length >= 2;
+}
+
+// ─── INTERACTION HANDLERS ────────────────────────────────
+function selectDiaperCat(card, catValue) {
+  const cards = card.parentElement.querySelectorAll('.option-card');
+  cards.forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  
+  state.data.diaperCat = catValue;
+  state.data.diaperType = ''; 
+  validateCurrentScreen();
+}
+
+function renderDiaperTypes() {
+  const grid = document.getElementById('diaperTypeGrid');
+  grid.innerHTML = '';
+  document.getElementById('customDiaperInputWrap').style.display = 'none';
+  
+  const list = diaperTypes[state.data.diaperCat] || [];
+  if (state.data.diaperCat === '팬티형기저귀') {
+    document.getElementById('screen3Sub').textContent = '원내 제품 중 해당하는 제품명을 선택해 주세요.';
+  } else {
+    document.getElementById('screen3Sub').textContent = '세부 종류를 선택해 주세요.';
+  }
+
+  list.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'option-card';
+    if (state.data.diaperType === item.name) card.classList.add('selected');
+    
+    card.onclick = function() {
+      const all = grid.querySelectorAll('.option-card');
+      all.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      
+      state.data.diaperType = item.name;
+      
+      if (item.name === '자가') {
+        document.getElementById('customDiaperInputWrap').style.display = 'block';
+        document.getElementById('customDiaperName').focus();
+      } else {
+        document.getElementById('customDiaperInputWrap').style.display = 'none';
+      }
+      validateCurrentScreen();
+    };
+    
+    card.innerHTML = `
+      <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="card-name" style="text-align:left; font-size:14px; padding-right:16px;">${item.name}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function changeQty(amt) {
+  const el = document.getElementById('qtyDisplay');
+  let v = parseInt(el.value) + amt;
+  if (v < 1) v = 1;
+  if (v > 99) v = 99;
+  el.value = v;
+  state.data.qty = v;
+  updateReviewSummary();
+  validateCurrentScreen();
+}
+
+function setQty(val) {
+  const el = document.getElementById('qtyDisplay');
+  el.value = val;
+  state.data.qty = val;
+  updateReviewSummary();
+  validateCurrentScreen();
+}
+
+function selectOption(card, key, value) {
+  const cards = card.parentElement.querySelectorAll('.option-card');
+  cards.forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  state.data[key] = value;
+  validateCurrentScreen();
+}
+
+function selectStaffTypeOption(card, value) {
+  const cards = card.parentElement.querySelectorAll('.option-card');
+  cards.forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  
+  state.data.staffType = value;
+  
+  const nameInp = document.getElementById('staffName');
+  nameInp.disabled = false;
+  nameInp.placeholder = `${value} 성명을 입력하세요`;
+  nameInp.focus();
+  
+  validateCurrentScreen();
+}
+
+function updateReviewSummary() {
+  let itemDisplay = state.data.diaperType;
+  if (state.data.diaperType === '자가') {
+    const cName = document.getElementById('customDiaperName').value.trim();
+    itemDisplay = cName ? `자가 (${cName})` : '자가 기저귀';
+  }
+  
+  document.getElementById('rev-patient').textContent = `${state.data.patientName || '-'} (${state.data.roomNo || '-'}호)`;
+  document.getElementById('rev-diaper').textContent = `${itemDisplay || '-'} / ${state.data.qty}개`;
+  document.getElementById('rev-dept').textContent = state.data.dept || '-';
+  document.getElementById('rev-staff').textContent = state.data.staffName ? `${state.data.staffType} ${state.data.staffName}` : '-';
+}
+
+// ─── 🚀 구글 스프레드시트 실시간 데이터 전송 연동 [POST] ───
+function saveDataToGoogleSheets() {
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.style.display = 'flex';
+
+  let finalDiaperName = state.data.diaperType;
+  if (state.data.diaperType === '자가') {
+    const cName = document.getElementById('customDiaperName').value.trim();
+    finalDiaperName = `자가 (${cName})`;
+  }
+
+  // 구글 웹 앱으로 전송할 JSON 데이터 묶음 만들기
+  const payload = {
+    date: state.data.date,
+    time: state.data.time,
+    dept: state.data.dept,
+    staffType: state.data.staffType,
+    staffName: state.data.staffName,
+    patientName: state.data.patientName,
+    patientId: state.data.patientId,
+    roomNo: state.data.roomNo,
+    diaperCat: state.data.diaperCat,
+    diaperType: finalDiaperName,
+    qty: state.data.qty
+  };
+
+  fetch(scriptURL, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(response => {
+    if (response.result === 'success') {
+      // 화면 8단계 연동 정보 업데이트
+      document.getElementById('successSummary').innerHTML = `
+        <div style="font-size:13px; color:var(--text2); line-height:1.6;">
+          • <b>환자:</b> ${payload.patientName} (${payload.roomNo}호)<br>
+          • <b>품목:</b> ${payload.diaperType}<br>
+          • <b>수량:</b> ${payload.qty}개<br>
+          • <b>병동:</b> ${payload.dept} (${payload.staffName} 등록 완료)
+        </div>
+      `;
+      goTo(8);
+      loadRecordsFromServer(); // 실시간 통계 갱신을 위해 데이터 재조회
+    } else {
+      alert('구글 저장 실패: ' + response.message);
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert('네트워크 저장 실패! 구글 앱스 스크립트 배포 주소 및 상태를 점검하세요.');
+  })
+  .finally(() => {
+    overlay.style.display = 'none';
+  });
+}
+
+// ─── 🚀 구글 스프레드시트 데이터 동기화 조회 [GET] ───
+function loadRecordsFromServer() {
+  fetch(scriptURL)
+  .then(res => res.json())
+  .then(data => {
+    state.serverRecords = data;
+    renderStats();
+  })
+  .catch(err => console.error('구글 데이터 조회 오류:', err));
+}
+
+function showStats() {
+  goTo(9);
+  renderStats();
+}
+
+function resetForm() {
+  document.getElementById('patientName').value = '';
+  document.getElementById('patientId').value = '';
+  document.getElementById('roomNo').value = '';
+  document.getElementById('customDiaperName').value = '';
+  document.getElementById('staffName').value = '';
+  document.getElementById('staffName').disabled = true;
+  
+  state.data.diaperCat = '';
+  state.data.diaperType = '';
+  state.data.qty = 1;
+  document.getElementById('qtyDisplay').value = 1;
+  state.data.dept = '';
+  state.data.staffType = '';
+  state.data.staffName = '';
+  
+  const allCards = document.querySelectorAll('.option-card');
+  allCards.forEach(c => c.classList.remove('selected'));
+  
+  init();
+  goTo(1);
+}
+
+// ─── STATS ENGINE ────────────────────────────────────────
+function switchStatsTab(btn, tabName) {
+  const tabs = btn.parentElement.querySelectorAll('.stats-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  state.statsTab = tabName;
+  renderStats();
+}
+
+function setStatsFilter(btn, filterValue) {
+  const chips = btn.parentElement.querySelectorAll('.filter-chip');
+  chips.forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  state.statsFilter = filterValue;
+
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+
+  if (filterValue === 'today') {
+    document.getElementById('statsStartDate').value = todayStr;
+    document.getElementById('statsEndDate').value = todayStr;
+  } else if (filterValue === 'week') {
+    const first = now.getDate() - now.getDay() + 1;
+    const monday = new Date(now.setDate(first));
+    document.getElementById('statsStartDate').value = `${monday.getFullYear()}-${pad(monday.getMonth()+1)}-${pad(monday.getDate())}`;
+    document.getElementById('statsEndDate').value = todayStr;
+  } else if (filterValue === 'month') {
+    document.getElementById('statsStartDate').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`;
+    document.getElementById('statsEndDate').value = todayStr;
+  } else if (filterValue === 'all') {
+    document.getElementById('statsStartDate').value = '2026-01-01';
+    document.getElementById('statsEndDate').value = '2026-12-31';
+  }
+  renderStats();
+}
+
+function syncCustomFilterState() {
+  const chips = document.querySelectorAll('.filter-chip');
+  chips.forEach(c => c.classList.remove('active'));
+  state.statsFilter = 'custom';
+}
+
+function getFilteredRecords() {
+  const start = document.getElementById('statsStartDate').value;
+  const end = document.getElementById('statsEndDate').value;
+  
+  return state.serverRecords.filter(r => {
+    if (!r.date) return false;
+    const cleanDate = r.date.replace(/\./g, '-').trim();
+    return cleanDate >= start && cleanDate <= end;
+  });
+}
+
+function renderStats() {
+  const records = getFilteredRecords();
+  document.getElementById('statsTotalSub').textContent = `필터링된 기록: 총 ${records.length}건`;
+  
+  const container = document.getElementById('statsContent');
+  container.innerHTML = '';
+  
+  if (records.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="empty-title">데이터가 없습니다</div>
+        <div class="empty-desc">선택된 기간 내에 등록된 내역이 없습니다.</div>
+      </div>
+    `;
+    return;
+  }
+  
+  if (state.statsTab === 'overview') {
+    renderOverview(records, container);
+  } else if (state.statsTab === 'patient') {
+    renderGroupedChart(records, container, 'patientName', '환자별 누적 사용량', 'accent');
+  } else if (state.statsTab === 'dept') {
+    renderGroupedChart(records, container, 'dept', '부서별(병동) 누적 사용량', 'warn');
+  } else if (state.statsTab === 'records') {
+    renderRecordList(records, container);
+  }
+}
+
+function renderOverview(records, container) {
+  let catSum = {}, typeSum = {};
+  records.forEach(r => {
+    const q = parseInt(r.qty) || 1;
+    catSum[r.diaperCat] = (catSum[r.diaperCat] || 0) + q;
+    typeSum[r.diaperType] = (typeSum[r.diaperType] || 0) + q;
+  });
+  
+  let html = `<div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">기저귀 대분류 통계</div><span class="stat-badge category-badge">구분별</span></div>`;
+  const maxCat = Math.max(...Object.values(catSum), 1);
+  Object.keys(catSum).sort((a,b)=>catSum[b]-catSum[a]).forEach(k => {
+    const pct = (catSum[k]/maxCat)*100;
+    let label = k === '팬티형기저귀' ? '팬티형 기저귀' : k === '겉기저귀' ? '겉 기저귀' : k === '속기저귀' ? '속 기저귀' : '위생 깔개 매트';
+    html += `
+      <div class="stat-bar-row">
+        <div class="stat-bar-label">${label}</div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%"></div></div>
+        <div class="stat-bar-count">${catSum[k]}</div>
+      </div>`;
+  });
+  html += `</div>`;
+  
+  html += `<div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">기저귀 품목별 세부 현황</div><span class="stat-badge">품목별</span></div>`;
+  const maxType = Math.max(...Object.values(typeSum), 1);
+  Object.keys(typeSum).sort((a,b)=>typeSum[b]-typeSum[a]).forEach(k => {
+    const pct = (typeSum[k]/maxType)*100;
+    html += `
+      <div class="stat-bar-row">
+        <div class="stat-bar-label" title="${k}">${k}</div>
+        <div class="stat-bar-track"><div class="stat-bar-fill accent" style="width:${pct}%"></div></div>
+        <div class="stat-bar-count">${typeSum[k]}</div>
+      </div>`;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function renderGroupedChart(records, container, keyField, title, colorClass) {
+  let sum = {};
+  records.forEach(r => {
+    const k = r[keyField] || '미지정';
+    const q = parseInt(r.qty) || 1;
+    sum[k] = (sum[k] || 0) + q;
+  });
+  
+  let html = `<div class="stat-card"><div class="stat-card-header"><div class="stat-card-title">${title}</div></div>`;
+  const max = Math.max(...Object.values(sum), 1);
+  Object.keys(sum).sort((a,b)=>sum[b]-sum[a]).forEach(k => {
+    const pct = (sum[k]/max)*100;
+    html += `
+      <div class="stat-bar-row">
+        <div class="stat-bar-label">${k}</div>
+        <div class="stat-bar-track"><div class="stat-bar-fill ${colorClass}" style="width:${pct}%"></div></div>
+        <div class="stat-bar-count">${sum[k]}</div>
+      </div>`;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function renderRecordList(records, container) {
+  let html = '';
+  // 최신 등록 순 정렬
+  const reversed = [...records].reverse();
+  reversed.forEach(r => {
+    let dotColor = '#2563EB';
+    if(r.diaperCat === '겉기저귀') dotColor = '#10B981';
+    if(r.diaperCat === '속기저귀') dotColor = '#F59E0B';
+    if(r.diaperCat === '위생깔개매트') dotColor = '#EF4444';
+    
+    html += `
+      <div class="record-item">
+        <div class="record-dot" style="background:${dotColor}"></div>
+        <div class="record-main">
+          <div class="record-patient">${r.patientName} <span style="font-size:11px;font-weight:normal;color:var(--text2)">(${r.roomNo}호 / ${r.patientId})</span><span class="ward-badge">${r.dept}</span></div>
+          <div class="record-meta">${r.diaperType} | ${r.staffType} ${r.staffName}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px;">${r.date} ${r.time}</div>
+        </div>
+        <div class="record-qty">${r.qty}<span>개</span></div>
+      </div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ─── EXPORT EXCEL (CSV) 연동 ────────────────────────────
+function exportCSV() {
+  const records = getFilteredRecords();
+  if (records.length === 0) {
+    alert('내보낼 데이터가 없습니다.');
+    return;
+  }
+  
+  let csvContent = "\uFEFF날짜,시간,부서,직원유형,직원이름,환자이름,환자번호,병실,대분류,상세내용,수량\n";
+  records.forEach(r => {
+    csvContent += `"${r.date}","${r.time}","${r.dept}","${r.staffType}","${r.staffName}","${r.patientName}","${r.patientId}","${r.roomNo}","${r.diaperCat}","${r.diaperType}","${r.qty}"\n`;
+  });
+  
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `기저귀_사용_통계_리포트_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+</script>
 </body>
 </html>
