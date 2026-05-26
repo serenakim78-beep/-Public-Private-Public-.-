@@ -164,16 +164,6 @@
     background: var(--primary-light);
     box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
   }
-  .option-card .card-icon {
-    font-size: 28px;
-    margin-bottom: 6px;
-    display: block;
-  }
-  .option-card .card-icon svg {
-    width: 32px;
-    height: 32px;
-    margin-bottom: 4px;
-  }
   .option-card .card-name {
     font-size: 13px;
     font-weight: 600;
@@ -665,7 +655,7 @@
     </div>
   </div>
 
-  <!-- STEP PROGRESS (hidden on stats/success) -->
+  <!-- STEP PROGRESS -->
   <div class="step-progress" id="stepProgress">
     <div class="progress-track">
       <div class="progress-fill" id="progressFill" style="width:14%"></div>
@@ -730,10 +720,10 @@
         <div class="card-name">행정직원</div>
         <div class="card-desc">병동 행정 담당자</div>
       </div>
-      <div class="option-card" onclick="selectOption(this,'staffType','생동직원')">
+      <div class="option-card" onclick="selectOption(this,'staffType','병동직원')">
         <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="card-name">생동직원</div>
-        <div class="card-desc">생동 담당 직원</div>
+        <div class="card-name">병동직원</div>
+        <div class="card-desc">병동 근무 담당 직원</div>
       </div>
       <div class="option-card" onclick="selectOption(this,'staffType','간병사')">
         <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
@@ -767,14 +757,14 @@
     <div class="screen-title">기저귀 구분</div>
     <div class="screen-sub">사용한 기저귀 종류를 선택해 주세요.</div>
     <div class="option-grid single">
-      <div class="option-card" onclick="selectDiaperCat(this,'판티형기저귀')">
+      <div class="option-card" onclick="selectDiaperCat(this,'팬티형기저귀')">
         <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="card-name">판티형 기저귀</div>
+        <div class="card-name">팬티형 기저귀</div>
         <div class="card-desc">팬티처럼 착용하는 성인용 기저귀</div>
       </div>
-      <div class="option-card" onclick="selectDiaperCat(this,'일기저귀')">
+      <div class="option-card" onclick="selectDiaperCat(this,'겉기저귀')">
         <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="card-name">일 기저귀</div>
+        <div class="card-name">겉 기저귀</div>
         <div class="card-desc">테이프형 일반 기저귀</div>
       </div>
       <div class="option-card" onclick="selectDiaperCat(this,'속기저귀')">
@@ -782,9 +772,9 @@
         <div class="card-name">속 기저귀</div>
         <div class="card-desc">기저귀 안에 사용하는 속 패드</div>
       </div>
-      <div class="option-card" onclick="selectDiaperCat(this,'위생샌드매트')">
+      <div class="option-card" onclick="selectDiaperCat(this,'위생깔개매트')">
         <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="card-name">위생 샌드매트</div>
+        <div class="card-name">위생 깔개 매트</div>
         <div class="card-desc">침대 방수 매트</div>
       </div>
     </div>
@@ -899,9 +889,9 @@ const state = {
   statsFilter: 'all'
 };
 
-// ─── DIAPER DATA ───────────────────────────────────────────
+// ─── DIAPER DATA (WORD REPLACED) ───────────────────────────
 const diaperTypes = {
-  '판티형기저귀': [
+  '팬티형기저귀': [
     { name: '국산 서림 시그널라인 大 대처위 중흡수 흡수율 750 중형' },
     { name: '국산 서림 시그널라인 大 대형 흡수율 800 대형' },
     { name: '국산 서림 시그널라인 대처위 국내형 흡수율 830 국내형' },
@@ -911,8 +901,8 @@ const diaperTypes = {
     { name: '중국 확산스로드 선라인처위 대형 흡수율 1200 내형' },
     { name: '국산 유한킴벌리 리에트 인상 연상 이더워이 다형 흡수율 1200 대형 자기' }
   ],
-  '일기저귀': [
-    { name: '중국 포린트 일기저귀 제작 테이닝형 대형 성인용 600 대형' },
+  '겉기저귀': [
+    { name: '중국 포린트 겉기저귀 제작 테이닝형 대형 성인용 600 대형' },
     { name: '중국 이지귀 콘드 성인용 기저귀 중형 흡수율 750 중형' },
     { name: '자가 지급' }
   ],
@@ -920,8 +910,8 @@ const diaperTypes = {
     { name: '중국 포린트 일자형 속기저귀 보통 사이즈 보통' },
     { name: '자가 지급' }
   ],
-  '위생샌드매트': [
-    { name: '중국 포린트 위생샌드 게매 대형 사이즈 다형' },
+  '위생깔개매트': [
+    { name: '중국 포린트 위생깔개 게매 대형 사이즈 다형' },
     { name: '자가 지급' }
   ]
 };
@@ -1223,7 +1213,7 @@ function resetForm() {
 
 // ─── STATISTICS & FILTERS ────────────────────────────────────
 function showStats() {
-  document.getElementById('headerSub').textContent = "통계 및 사용 분석";
+  document.getElementById('headerSub').textContent = "사용 통계 분석";
   loadRecords();
   goTo(9);
   renderStats();
@@ -1302,9 +1292,9 @@ function renderStats() {
     let html = '';
     filtered.forEach(r => {
       let dotColor = '#2563EB';
-      if(r.diaperCat === '일기저귀') dotColor = '#10B981';
+      if(r.diaperCat === '겉기저귀') dotColor = '#10B981';
       if(r.diaperCat === '속기저귀') dotColor = '#F59E0B';
-      if(r.diaperCat === '위생샌드매트') dotColor = '#EF4444';
+      if(r.diaperCat === '위생깔개매트') dotColor = '#EF4444';
 
       html += `
         <div class="record-item">
