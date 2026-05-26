@@ -778,7 +778,13 @@
   <div class="screen" id="screen6">
     <div class="screen-title">기저귀 종류</div>
     <div class="screen-sub" id="screen6Sub">세부 종류를 선택해 주세요.</div>
-    <div class="option-grid single" id="diaperTypeGrid"></div>
+    
+    <div class="option-grid single" id="diaperTypeGrid" style="margin-bottom:16px;"></div>
+
+    <div class="input-wrap" id="customDiaperInputWrap" style="display:none; animation: slideUp 0.2s ease;">
+      <span class="input-label" style="color:var(--primary); font-weight:700;">자가 기저귀 명칭 직접 입력</span>
+      <input type="text" class="text-input" id="customDiaperName" placeholder="사용한 기저귀 명칭을 직접 입력하세요." oninput="validateCustomDiaper()">
+    </div>
   </div>
 
   <div class="screen" id="screen7">
@@ -876,45 +882,45 @@ const state = {
   statsFilter: 'all'
 };
 
-// ─── DIAPER DATA ───────────────────────────────────────────
+// ─── DIAPER DATA (정확한 오타 교정 완료) ───────────────────────
 const diaperTypes = {
   '팬티형기저귀': [
-    { name: '국산 서림 시그널라인 大 대처위 중흡수 흡수율 750 중형' },
-    { name: '국산 서림 시그널라인 大 대형 흡수율 800 대형' },
-    { name: '국산 서림 시그널라인 대처위 국내형 흡수율 830 국내형' },
-    { name: '태국 라이너리 인상 안더워이 중형 흡수율 1,000 중형' },
-    { name: '태국 라이너리 약상 이더워이 大 다형 흡수율 850 약형' },
-    { name: '국산 유한킴벌리 리에트 스라양 안더워이 중형 흡수율 400 중형' },
-    { name: '중국 확산스로드 선라인처위 대형 흡수율 1200 내형' },
-    { name: '국산 유한킴벌리 리에트 인상 연상 이더워이 다형 흡수율 1200 대형 자기' }
+    { name: '국산 서림 시그널라인 언더웨어 중형 흡수율780 중형' },
+    { name: '국산 서림 시그널라인 언더웨어 대형 흡수율 800 대형' },
+    { name: '국산 서림 시그널라인 언더웨어 특대형 흡수율 880 특대형' },
+    { name: '타이완 테나 프로스킨 언더웨어 중형 흡수율 1,000 중형' },
+    { name: '태국 라이프리 안심 언더웨어 중형 흡수율 850 중형' },
+    { name: '태국 라이프리 안심 언더웨어 대형 흡수율 850 중형' },
+    { name: '국산 유한킴벌리 디펜드 스타일 언더웨어 중형 흡수율 400 중형' },
+    { name: '중국 휴먼스토리 팬티 언더웨어 대형 흡수율 1200 대형' },
+    { name: '국산 유한킴벌리 디펜드 안심 언더웨어 대형 흡수율 1200 대형' },
+    { name: '자가' }
   ],
   '겉기저귀': [
     { name: '중국 포린트 겉기저귀 제작 테이닝형 대형 성인용 600 대형' },
     { name: '중국 이지귀 콘드 성인용 기저귀 중형 흡수율 750 중형' },
-    { name: '자가 지급' }
+    { name: '자가' }
   ],
   '속기저귀': [
     { name: '중국 포린트 일자형 속기저귀 보통 사이즈 보통' },
-    { name: '자가 지급' }
+    { name: '자가' }
   ],
   '위생깔개매트': [
     { name: '중국 포린트 위생깔개 게매 대형 사이즈 다형' },
-    { name: '자가 지급' }
+    { name: '자가' }
   ]
 };
 
-// ─── INIT (현재 시간 셋팅 및 하단바 출력 복구) ──────────────
+// ─── INIT ────────────────────────────────────────────────
 function init() {
   const now = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const dateStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
   const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
   
-  // 인풋 엘리먼트에 초기 기본값 할당
   document.getElementById('dtDate').value = dateStr;
   document.getElementById('dtTime').value = timeStr;
   
-  // 상태 정보 동기화
   state.data.date = dateStr;
   state.data.time = timeStr;
   
@@ -933,7 +939,6 @@ function updateDateDisplay() {
   document.getElementById('dtTimeDisp').textContent = state.data.time;
 }
 
-// 사용자가 수동 변경할 때 실시간 반영
 document.getElementById('dtDate').addEventListener('input', function() {
   state.data.date = this.value;
   updateDateDisplay();
@@ -983,7 +988,6 @@ function updateBottomBar() {
   const bb = document.getElementById('bottomBar');
   if (!btnBack || !btnNext || !bb) return;
 
-  // 통계나 완료화면에서는 하단 다음 바 감춤
   if (state.currentScreen === 8 || state.currentScreen === 9) {
     bb.style.display = 'none';
     return;
@@ -1034,6 +1038,15 @@ function goNext() {
     state.data.patientName = document.getElementById('patientName').value.trim();
     state.data.patientId = document.getElementById('patientId').value.trim();
   }
+  if (state.currentScreen === 6) {
+    // '자가' 선택 후 텍스트를 직접 썼다면 최종 데이터 가공 후 적용
+    if (state.data.diaperType === '자가') {
+      const customValue = document.getElementById('customDiaperName').value.trim();
+      state.data.finalDiaperName = `자가 (${customValue})`;
+    } else {
+      state.data.finalDiaperName = state.data.diaperType;
+    }
+  }
   if (state.currentScreen < state.totalScreens) {
     goTo(state.currentScreen + 1);
     if (state.currentScreen === 6) populateDiaperTypes();
@@ -1054,7 +1067,13 @@ function canProceed() {
   if (s === 3) return state.data.staffType !== '' && document.getElementById('staffName').value.trim() !== '';
   if (s === 4) return document.getElementById('patientName').value.trim() !== '';
   if (s === 5) return state.data.diaperCat !== '';
-  if (s === 6) return state.data.diaperType !== '';
+  if (s === 6) {
+    if (state.data.diaperType === '') return false;
+    if (state.data.diaperType === '자가') {
+      return document.getElementById('customDiaperName').value.trim() !== '';
+    }
+    return true;
+  }
   if (s === 7) return state.data.qty > 0;
   return true;
 }
@@ -1067,6 +1086,7 @@ function validateCurrentScreen() {
 
 function validateScreen3() { validateCurrentScreen(); }
 function validateScreen4() { validateCurrentScreen(); }
+function validateCustomDiaper() { validateCurrentScreen(); }
 
 // ─── SELECTION LOGIC ─────────────────────────────────────────
 function selectOption(el, type, value) {
@@ -1086,6 +1106,8 @@ function selectDiaperCat(el, catValue) {
   if (state.data.diaperCat !== catValue) {
     state.data.diaperCat = catValue;
     state.data.diaperType = '';
+    state.data.finalDiaperName = '';
+    document.getElementById('customDiaperName').value = ''; // 초기화
   }
   validateCurrentScreen();
 }
@@ -1094,6 +1116,7 @@ function selectDiaperCat(el, catValue) {
 function populateDiaperTypes() {
   const grid = document.getElementById('diaperTypeGrid');
   const subTitle = document.getElementById('screen6Sub');
+  const customInputWrap = document.getElementById('customDiaperInputWrap');
   if (!grid) return;
 
   grid.innerHTML = '';
@@ -1113,14 +1136,31 @@ function populateDiaperTypes() {
     
     card.onclick = function() {
       selectOption(this, 'diaperType', item.name);
+      
+      // '자가' 카드를 선택했을 때 주관식 텍스트 입력창 노출 여부 조절
+      if (item.name === '자가') {
+        customInputWrap.style.display = 'block';
+        document.getElementById('customDiaperName').focus();
+      } else {
+        customInputWrap.style.display = 'none';
+      }
+      validateCurrentScreen();
     };
 
     card.innerHTML = `
       <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div class="card-name" style="text-align:left; font-size:12px;">${item.name}</div>
+      <div class="card-name" style="text-align:left; font-size:13px;">${item.name}</div>
     `;
     grid.appendChild(card);
   });
+
+  // 이전 단계로 왔을 때 기존 '자가' 선택 처리 유지용
+  if (state.data.diaperType === '자가') {
+    customInputWrap.style.display = 'block';
+  } else {
+    customInputWrap.style.display = 'none';
+  }
+
   validateCurrentScreen();
 }
 
@@ -1157,7 +1197,7 @@ function updateReviewPanel() {
   document.getElementById('rev-dept').textContent = state.data.dept || '-';
   document.getElementById('rev-staff').textContent = state.data.staffName ? `${state.data.staffName} (${state.data.staffType})` : '-';
   document.getElementById('rev-patient').textContent = state.data.patientName ? (state.data.patientName + (state.data.patientId ? ` (${state.data.patientId})` : '')) : '-';
-  document.getElementById('rev-diaper').textContent = state.data.diaperType ? `${state.data.diaperType} / ${state.data.qty}개` : '-';
+  document.getElementById('rev-diaper').textContent = state.data.finalDiaperName ? `${state.data.finalDiaperName} / ${state.data.qty}개` : '-';
 }
 
 // ─── SAVE & LOCALSTORAGE ──────────────────────────────────────
@@ -1191,7 +1231,7 @@ function saveRecord() {
     summaryBox.innerHTML = `
       <div class="info-row"><span class="info-key">일시</span><span class="info-val">${newRecord.date} ${newRecord.time}</span></div>
       <div class="info-row"><span class="info-key">환자/부서</span><span class="info-val">${newRecord.patientName} (${newRecord.dept})</span></div>
-      <div class="info-row"><span class="info-key">종류/수량</span><span class="info-val" style="color:var(--primary)">${newRecord.diaperType} / ${newRecord.qty}개</span></div>
+      <div class="info-row"><span class="info-key">종류/수량</span><span class="info-val" style="color:var(--primary)">${newRecord.finalDiaperName} / ${newRecord.qty}개</span></div>
     `;
   }
   
@@ -1206,12 +1246,15 @@ function resetForm() {
   state.data.patientId = '';
   state.data.diaperCat = '';
   state.data.diaperType = '';
+  state.data.finalDiaperName = '';
   state.data.qty = 1;
 
   document.getElementById('staffName').value = '';
   document.getElementById('patientName').value = '';
   document.getElementById('patientId').value = '';
   document.getElementById('qtyDisplay').value = 1;
+  document.getElementById('customDiaperName').value = '';
+  document.getElementById('customDiaperInputWrap').style.display = 'none';
   
   document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
   document.getElementById('headerSub').textContent = "요양병원 스마트 기록 시스템";
@@ -1315,7 +1358,7 @@ function renderStats() {
           <div class="record-main">
             <div class="record-patient">${r.patientName}<span class="ward-badge">${r.dept}</span></div>
             <div class="record-meta">${r.date} ${r.time} | ${r.staffName}(${r.staffType})</div>
-            <div class="record-meta" style="color:var(--text); font-weight:500; margin-top:2px;">${r.diaperType}</div>
+            <div class="record-meta" style="color:var(--text); font-weight:500; margin-top:2px;">${r.finalDiaperName || r.diaperType}</div>
           </div>
           <div class="record-qty">${r.qty}<span>개</span></div>
         </div>`;
@@ -1362,9 +1405,10 @@ function exportCSV() {
   csvContent += "날짜,시간,부서,직원유형,직원이름,환자이름,환자번호,기저귀구분,세부종류,수량\n";
 
   filtered.forEach(r => {
+    const diaperNameDisplay = r.finalDiaperName || r.diaperType;
     const row = [
       r.date, r.time, r.dept, r.staffType, r.staffName,
-      r.patientName, r.patientId || '-', r.diaperCat, `"${r.diaperType}"`, r.qty
+      r.patientName, r.patientId || '-', r.diaperCat, `"${diaperNameDisplay}"`, r.qty
     ];
     csvContent += row.join(",") + "\n";
   });
