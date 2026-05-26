@@ -665,14 +665,18 @@
 
   <div class="screen active" id="screen1">
     <div class="screen-title">사용 환자</div>
-    <div class="screen-sub">기저귀를 사용한 환자 이름을 입력해 주세요.</div>
+    <div class="screen-sub">기저귀를 사용한 환자의 정보를 입력해 주세요.</div>
     <div class="input-wrap">
       <span class="input-label">환자 이름</span>
       <input type="text" class="text-input" id="patientName" placeholder="홍길동" oninput="validateScreen1()" style="font-size:20px;font-weight:700;">
     </div>
     <div class="input-wrap">
-      <span class="input-label">환자 번호 (선택)</span>
-      <input type="text" class="text-input" id="patientId" placeholder="병실 또는 환자 번호 (예: 301호)">
+      <span class="input-label">환자 번호</span>
+      <input type="text" class="text-input" id="patientId" placeholder="예: P12345">
+    </div>
+    <div class="input-wrap">
+      <span class="input-label">병실</span>
+      <input type="text" class="text-input" id="roomNo" placeholder="예: 301호">
     </div>
   </div>
 
@@ -874,6 +878,7 @@ const state = {
     staffName: '',
     patientName: '',
     patientId: '',
+    roomNo: '',
     diaperCat: '',
     diaperType: '',
     qty: 1
@@ -1032,10 +1037,10 @@ function toggleMainStats() {
 function goNext() {
   if (!canProceed()) return;
   
-  // 변경된 순서에 맞춰 실시간 변수 추출 데이터 셋 연동
   if (state.currentScreen === 1) {
     state.data.patientName = document.getElementById('patientName').value.trim();
     state.data.patientId = document.getElementById('patientId').value.trim();
+    state.data.roomNo = document.getElementById('roomNo').value.trim();
   }
   if (state.currentScreen === 3) {
     if (state.data.diaperType === '자가') {
@@ -1089,7 +1094,6 @@ function validateCurrentScreen() {
 
 function validateScreen1() { validateCurrentScreen(); }
 function validateScreen7() { validateCurrentScreen(); }
-// 기저귀 수량 입력시 실시간으로 아래의 리뷰 창 동기화
 function validateCustomDiaper() { validateCurrentScreen(); }
 
 // ─── SELECTION LOGIC ─────────────────────────────────────────
@@ -1199,7 +1203,6 @@ function validateQty() {
 
 // ─── REVIEW PANEL ─────────────────────────────────────────────
 function updateReviewPanel() {
-  // 실시간 기저귀 이름 추출 적용
   if (state.data.diaperType === '자가') {
     const customValue = document.getElementById('customDiaperName').value.trim();
     state.data.finalDiaperName = `자가 (${customValue})`;
@@ -1207,7 +1210,13 @@ function updateReviewPanel() {
     state.data.finalDiaperName = state.data.diaperType;
   }
   
-  document.getElementById('rev-patient').textContent = state.data.patientName ? (state.data.patientName + (state.data.patientId ? ` (${state.data.patientId})` : '')) : '-';
+  let pInfo = state.data.patientName || '-';
+  let subInfo = [];
+  if (state.data.patientId) subInfo.push(state.data.patientId);
+  if (state.data.roomNo) subInfo.push(state.data.roomNo);
+  if (subInfo.length > 0) pInfo += ` (${subInfo.join(' / ')})`;
+
+  document.getElementById('rev-patient').textContent = pInfo;
   document.getElementById('rev-diaper').textContent = state.data.finalDiaperName ? `${state.data.finalDiaperName} / ${state.data.qty}개` : '-';
   document.getElementById('rev-dept').textContent = state.data.dept || '-';
   document.getElementById('rev-staff').textContent = state.data.staffName ? `${state.data.staffName} (${state.data.staffType})` : '-';
@@ -1230,7 +1239,6 @@ function loadRecords() {
 function saveRecord() {
   if (!canProceed()) return;
   
-  // 마지마 병동 이름 추출 바인딩 완료
   state.data.staffName = document.getElementById('staffName').value.trim();
 
   const newRecord = {
@@ -1244,9 +1252,15 @@ function saveRecord() {
 
   const summaryBox = document.getElementById('successSummary');
   if (summaryBox) {
+    let pInfo = newRecord.patientName;
+    let subInfo = [];
+    if (newRecord.patientId) subInfo.push(newRecord.patientId);
+    if (newRecord.roomNo) subInfo.push(newRecord.roomNo);
+    if (subInfo.length > 0) pInfo += ` (${subInfo.join('/')})`;
+
     summaryBox.innerHTML = `
       <div class="info-row"><span class="info-key">일시</span><span class="info-val">${newRecord.date} ${newRecord.time}</span></div>
-      <div class="info-row"><span class="info-key">환자/부서</span><span class="info-val">${newRecord.patientName} (${newRecord.dept})</span></div>
+      <div class="info-row"><span class="info-key">환자/부서</span><span class="info-val">${pInfo} [${newRecord.dept}]</span></div>
       <div class="info-row"><span class="info-key">종류/수량</span><span class="info-val" style="color:var(--primary)">${newRecord.finalDiaperName} / ${newRecord.qty}개</span></div>
     `;
   }
@@ -1260,6 +1274,7 @@ function resetForm() {
   state.data.staffName = '';
   state.data.patientName = '';
   state.data.patientId = '';
+  state.data.roomNo = '';
   state.data.diaperCat = '';
   state.data.diaperType = '';
   state.data.finalDiaperName = '';
@@ -1268,6 +1283,7 @@ function resetForm() {
   document.getElementById('staffName').value = '';
   document.getElementById('patientName').value = '';
   document.getElementById('patientId').value = '';
+  document.getElementById('roomNo').value = '';
   document.getElementById('qtyDisplay').value = 1;
   document.getElementById('customDiaperName').value = '';
   document.getElementById('customDiaperInputWrap').style.display = 'none';
@@ -1368,11 +1384,16 @@ function renderStats() {
       if(r.diaperCat === '속기저귀') dotColor = '#F59E0B';
       if(r.diaperCat === '위생깔개매트') dotColor = '#EF4444';
 
+      let pExtra = [];
+      if (r.patientId) pExtra.push(r.patientId);
+      if (r.roomNo) pExtra.push(r.roomNo);
+      const extraStr = pExtra.length > 0 ? ` [${pExtra.join('/')}]` : '';
+
       html += `
         <div class="record-item">
           <div class="record-dot" style="background:${dotColor}"></div>
           <div class="record-main">
-            <div class="record-patient">${r.patientName}<span class="ward-badge">${r.dept}</span></div>
+            <div class="record-patient">${r.patientName}${extraStr}<span class="ward-badge">${r.dept}</span></div>
             <div class="record-meta">${r.date} ${r.time} | ${r.staffName}(${r.staffType})</div>
             <div class="record-meta" style="color:var(--text); font-weight:500; margin-top:2px;">${r.finalDiaperName || r.diaperType}</div>
           </div>
@@ -1418,13 +1439,13 @@ function exportCSV() {
   if (filtered.length === 0) return alert('내보낼 기록이 없습니다.');
 
   let csvContent = "\uFEFF"; 
-  csvContent += "날짜,시간,부서,직원유형,직원이름,환자이름,환자번호,기저귀구분,세부종류,수량\n";
+  csvContent += "날짜,시간,부서,직원유형,직원이름,환자이름,환자번호,병실,기저귀구분,세부종류,수량\n";
 
   filtered.forEach(r => {
     const diaperNameDisplay = r.finalDiaperName || r.diaperType;
     const row = [
       r.date, r.time, r.dept, r.staffType, r.staffName,
-      r.patientName, r.patientId || '-', r.diaperCat, `"${diaperNameDisplay}"`, r.qty
+      r.patientName, r.patientId || '-', r.roomNo || '-', r.diaperCat, `"${diaperNameDisplay}"`, r.qty
     ];
     csvContent += row.join(",") + "\n";
   });
