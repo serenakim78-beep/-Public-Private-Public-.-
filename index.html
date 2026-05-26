@@ -404,7 +404,7 @@
     border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     overflow: hidden;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
   .stats-tab {
     flex: 1;
@@ -565,6 +565,7 @@
     padding-bottom: 4px;
   }
   .filter-chip {
+    flex: 1;
     border: 2px solid var(--border);
     border-radius: 20px;
     padding: 6px 14px;
@@ -574,22 +575,22 @@
     background: white;
     cursor: pointer;
     white-space: nowrap;
+    text-align: center;
     font-family: 'Noto Sans KR', sans-serif;
     transition: all 0.15s;
   }
   .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-  /* DATE PICKER RANGE PANEL */
+  /* DATE PICKER RANGE PANEL (TOP FIXED) */
   .custom-range-panel {
     background: var(--surface2);
     border: 2px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    animation: slideUp 0.2s ease;
   }
   .range-inputs {
     display: flex;
@@ -604,6 +605,7 @@
     font-size: 13px;
     font-family: 'Noto Sans KR', sans-serif;
     outline: none;
+    background: white;
   }
 
   /* RECORD LIST */
@@ -693,7 +695,7 @@
 
   <div class="screen active" id="screen1">
     <div class="screen-title">사용 환자</div>
-    <div class="screen-sub">기저귀를 사용한 환자의 정보를 입력해 주세요.</div>
+    <div class="screen-sub">기저귀를 사용한 환자의 정보를 모두 입력해 주세요. (모든 칸 작성 필수)</div>
     <div class="input-wrap">
       <span class="input-label">환자 이름</span>
       <input type="text" class="text-input" id="patientName" placeholder="홍길동" oninput="filterKorean(this); validateScreen1();" style="font-size:20px;font-weight:700;">
@@ -876,21 +878,20 @@
       <button class="stats-tab" onclick="switchStatsTab(this,'records')">기록 목록</button>
     </div>
 
-    <div class="filter-row" id="statsFilter">
-      <button class="filter-chip active" onclick="setStatsFilter(this,'all')">전체</button>
-      <button class="filter-chip" onclick="setStatsFilter(this,'today')">오늘</button>
-      <button class="filter-chip" onclick="setStatsFilter(this,'week')">이번주</button>
-      <button class="filter-chip" onclick="setStatsFilter(this,'month')">이번달</button>
-      <button class="filter-chip" onclick="setStatsFilter(this,'custom')">기간 지정</button>
-    </div>
-
-    <div class="custom-range-panel" id="customRangePanel" style="display:none;">
+    <div class="custom-range-panel" id="customRangePanel">
       <span class="input-label" style="margin-bottom:2px; font-weight:700; color:var(--primary);">조회 기간 직접 선택</span>
       <div class="range-inputs">
-        <input type="date" id="statsStartDate" onchange="renderStats()">
+        <input type="date" id="statsStartDate" onchange="syncCustomFilterState(); renderStats();">
         <span style="font-size:13px; color:var(--text2)">~</span>
-        <input type="date" id="statsEndDate" onchange="renderStats()">
+        <input type="date" id="statsEndDate" onchange="syncCustomFilterState(); renderStats();">
       </div>
+    </div>
+
+    <div class="filter-row" id="statsFilter">
+      <button class="filter-chip" id="chip-today" onclick="setStatsFilter(this,'today')">오늘</button>
+      <button class="filter-chip" id="chip-week" onclick="setStatsFilter(this,'week')">이번주</button>
+      <button class="filter-chip" id="chip-month" onclick="setStatsFilter(this,'month')">이번달</button>
+      <button class="filter-chip active" id="chip-all" onclick="setStatsFilter(this,'all')">전체</button>
     </div>
 
     <div id="statsContent"></div>
@@ -922,7 +923,7 @@ const state = {
     qty: 1
   },
   statsTab: 'overview',
-  statsFilter: 'all'
+  statsFilter: 'all' // 기본은 전체 데이터 노출
 };
 
 // ─── DIAPER DATA ───
@@ -973,7 +974,7 @@ function init() {
   document.getElementById('dtDate').value = dateStr;
   document.getElementById('dtTime').value = timeStr;
   
-  // 통계 디폴트 날짜를 오늘로 우선 매핑
+  // 최초 기본 날짜 지정 셋팅 (전체 필터일 때는 작동 방식에 영향을 안 미치나 입력 창 초기화용)
   document.getElementById('statsStartDate').value = dateStr;
   document.getElementById('statsEndDate').value = dateStr;
   
@@ -1119,9 +1120,15 @@ function goBack() {
   }
 }
 
+// [수정 지점] 1단계에서 이름, 번호, 병실이 모두 기입되어야 proceed 가능하도록 제약 강화
 function canProceed() {
   const s = state.currentScreen;
-  if (s === 1) return document.getElementById('patientName').value.trim() !== '';
+  if (s === 1) {
+    const pName = document.getElementById('patientName').value.trim();
+    const pId = document.getElementById('patientId').value.trim();
+    const pRoom = document.getElementById('roomNo').value.trim();
+    return pName !== '' && pId !== '' && pRoom !== '';
+  }
   if (s === 2) return state.data.diaperCat !== '';
   if (s === 3) {
     if (state.data.diaperType === '') return false;
@@ -1377,54 +1384,63 @@ function switchStatsTab(el, tabName) {
   renderStats();
 }
 
+// [수정 지점] 상단 오늘/이번주/이번달/전체 탭을 눌렀을 때의 동작 처리 정의
 function setStatsFilter(el, filterRange) {
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   state.statsFilter = filterRange;
   
-  // 'custom' 필터일 때만 기간 입력 패널 노출
-  const rangePanel = document.getElementById('customRangePanel');
-  if (filterRange === 'custom') {
-    rangePanel.style.display = 'block';
-  } else {
-    rangePanel.style.display = 'none';
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+
+  // 탭 클릭에 대응하여 기간 선택 input 값도 유연하게 연동 변경 처리
+  if (filterRange === 'today') {
+    document.getElementById('statsStartDate').value = todayStr;
+    document.getElementById('statsEndDate').value = todayStr;
+  } else if (filterRange === 'week') {
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const weekAgoStr = `${oneWeekAgo.getFullYear()}-${pad(oneWeekAgo.getMonth()+1)}-${pad(oneWeekAgo.getDate())}`;
+    document.getElementById('statsStartDate').value = weekAgoStr;
+    document.getElementById('statsEndDate').value = todayStr;
+  } else if (filterRange === 'month') {
+    const firstDayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`;
+    document.getElementById('statsStartDate').value = firstDayStr;
+    document.getElementById('statsEndDate').value = todayStr;
   }
   
   renderStats();
 }
 
+// 사용자가 기간 직접 선택 패널 안의 인풋 날짜를 마우스로 변경하면 하단 고정 칩 액티브 해제 후 커스텀 모드로 변경
+function syncCustomFilterState() {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  state.statsFilter = 'custom_range'; 
+}
+
 function getFilteredRecords() {
   const now = new Date();
+  
+  // 1단계: 상단 '조회 기간 직접 선택' 날짜 바인딩 추출
+  const startInput = document.getElementById('statsStartDate').value;
+  const endInput = document.getElementById('statsEndDate').value;
+
   return recordsList.filter(r => {
     const rDate = new Date(r.date);
+    rDate.setHours(0,0,0,0);
     
+    // '전체' 칩 필터 상태일때는 날짜 무관 전부 통과
     if (state.statsFilter === 'all') return true;
     
-    if (state.statsFilter === 'today') {
-      return rDate.toDateString() === now.toDateString();
-    }
-    if (state.statsFilter === 'week') {
-      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      return rDate >= oneWeekAgo;
-    }
-    if (state.statsFilter === 'month') {
-      return rDate.getMonth() === now.getMonth() && rDate.getFullYear() === now.getFullYear();
-    }
-    if (state.statsFilter === 'custom') {
-      const startInput = document.getElementById('statsStartDate').value;
-      const endInput = document.getElementById('statsEndDate').value;
-      if (!startInput || !endInput) return true;
-      
+    // 직접 선택 모드 및 일반 날짜 구간 필터 처리 공통 적용
+    if (startInput && endInput) {
       const startDate = new Date(startInput);
       const endDate = new Date(endInput);
-      
-      // 시간 단위를 제외한 날짜 비교를 위해 오프셋 처리
-      rDate.setHours(0,0,0,0);
       startDate.setHours(0,0,0,0);
       endDate.setHours(0,0,0,0);
-      
       return rDate >= startDate && rDate <= endDate;
     }
+    
     return true;
   });
 }
@@ -1441,123 +1457,4 @@ function renderStats() {
     content.innerHTML = `
       <div class="empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <div class="empty-title">기록이 없습니다</div>
-        <div class="empty-desc">선택한 조건에 맞는 데이터가 없습니다.</div>
-      </div>`;
-    return;
-  }
-
-  if (state.statsTab === 'overview') {
-    const counts = {};
-    // 변경 지점: 카테고리(diaperCat)가 아닌 실제 명칭(finalDiaperName)으로 세부 집계
-    filtered.forEach(r => { 
-      const name = r.finalDiaperName || r.diaperType || '미지정';
-      counts[name] = (counts[name] || 0) + r.qty; 
-    });
-    content.innerHTML = createStatCard("기저귀 종류별 상세 사용량", counts, 'accent');
-  } 
-  else if (state.statsTab === 'patient') {
-    const counts = {};
-    filtered.forEach(r => { counts[r.patientName] = (counts[r.patientName] || 0) + r.qty; });
-    content.innerHTML = createStatCard("환자별 기저귀 누적 사용량", counts, 'warn');
-  } 
-  else if (state.statsTab === 'dept') {
-    const counts = {};
-    filtered.forEach(r => { counts[r.dept] = (counts[r.dept] || 0) + r.qty; });
-    content.innerHTML = createStatCard("병동 부서별 사용량", counts, '');
-  } 
-  else if (state.statsTab === 'records') {
-    let html = '';
-    filtered.forEach(r => {
-      let dotColor = '#2563EB';
-      if(r.diaperCat === '겉기저귀') dotColor = '#10B981';
-      if(r.diaperCat === '속기저귀') dotColor = '#F59E0B';
-      if(r.diaperCat === '위생깔개매트') dotColor = '#EF4444';
-
-      let pExtra = [];
-      if (r.patientId) pExtra.push(r.patientId);
-      if (r.roomNo) pExtra.push(r.roomNo);
-      const extraStr = pExtra.length > 0 ? ` [${pExtra.join('/')}]` : '';
-
-      html += `
-        <div class="record-item">
-          <div class="record-dot" style="background:${dotColor}"></div>
-          <div class="record-main">
-            <div class="record-patient">${r.patientName}${extraStr}<span class="ward-badge">${r.dept}</span></div>
-            <div class="record-meta">${r.date} ${r.time} | ${r.staffName}(${r.staffType})</div>
-            <div class="record-meta" style="color:var(--text); font-weight:500; margin-top:2px;">${r.finalDiaperName || r.diaperType}</div>
-          </div>
-          <div class="record-qty">${r.qty}<span>개</span></div>
-        </div>`;
-    });
-    content.innerHTML = html;
-  }
-}
-
-function createStatCard(title, dataObj, colorClass) {
-  const arr = Object.keys(dataObj).map(key => ({ name: key, count: dataObj[key] }));
-  arr.sort((a, b) => b.count - a.count);
-
-  const max = arr.length > 0 ? arr[0].count : 1;
-  let rowsHtml = '';
-
-  arr.forEach(item => {
-    const pct = Math.round((item.count / max) * 100);
-    rowsHtml += `
-      <div class="stat-bar-row">
-        <div class="stat-bar-label" title="${item.name}">${item.name}</div>
-        <div class="stat-bar-track">
-          <div class="stat-bar-fill ${colorClass}" style="width: ${pct}%"></div>
-        </div>
-        <div class="stat-bar-count">${item.count}</div>
-      </div>`;
-  });
-
-  return `
-    <div class="stat-card">
-      <div class="stat-card-header">
-        <div class="stat-card-title">${title}</div>
-        <div class="stat-badge">종류별 집계</div>
-      </div>
-      ${rowsHtml}
-    </div>`;
-}
-
-// ─── EXPORT CSV ──────────────────────────────────────────────
-function exportCSV() {
-  const filtered = getFilteredRecords();
-  if (filtered.length === 0) return alert('내보낼 기록이 없습니다.');
-
-  let csvContent = "\uFEFF"; 
-  csvContent += "날짜,시간,부서,직원유형,직원이름,환자이름,환자번호,병실,기저귀구분,세부종류,수량\n";
-
-  filtered.forEach(r => {
-    const diaperNameDisplay = r.finalDiaperName || r.diaperType;
-    const row = [
-      r.date, r.time, r.dept, r.staffType, r.staffName,
-      r.patientName, r.patientId || '-', r.roomNo || '-', r.diaperCat, `"${diaperNameDisplay}"`, r.qty
-    ];
-    csvContent += row.join(",") + "\n";
-  });
-
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  
-  const now = new Date();
-  const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-  
-  link.setAttribute("href", url);
-  link.setAttribute("download", `기저귀_사용기록_통계_${dateStr}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-window.onload = init;
-</script>
-</body>
-</html>
+          <circle cx="12
