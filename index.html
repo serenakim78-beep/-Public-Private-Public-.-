@@ -664,83 +664,11 @@
   </div>
 
   <div class="screen active" id="screen1">
-    <div class="screen-title">날짜 및 시간</div>
-    <div class="screen-sub">기저귀 사용 날짜와 시간을 확인해 주세요.</div>
-
-    <div class="datetime-card">
-      <div class="dt-date" id="dtDateDisp"></div>
-      <div class="dt-time" id="dtTimeDisp"></div>
-      <div class="dt-edit">
-        <input type="date" id="dtDate">
-        <input type="time" id="dtTime">
-      </div>
-    </div>
-
-    <div class="input-wrap">
-      <span class="input-label">현재 시간으로 자동 설정됩니다. 수정이 필요하면 위에서 변경하세요.</span>
-    </div>
-  </div>
-
-  <div class="screen" id="screen2">
-    <div class="screen-title">사용 부서 선택</div>
-    <div class="screen-sub">환자가 있는 병동을 선택해 주세요.</div>
-    <div class="option-grid">
-      <div class="option-card" onclick="selectOption(this,'dept','2A병동')">
-        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="card-name">2A병동</div>
-      </div>
-      <div class="option-card" onclick="selectOption(this,'dept','2B병동')">
-        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="card-name">2B병동</div>
-      </div>
-      <div class="option-card" onclick="selectOption(this,'dept','3A병동')">
-        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="card-name">3A병동</div>
-      </div>
-      <div class="option-card" onclick="selectOption(this,'dept','3B병동')">
-        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="card-name">3B병동</div>
-      </div>
-      <div class="option-card" onclick="selectOption(this,'dept','5병동')">
-        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="card-name">5병동</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="screen" id="screen3">
-    <div class="screen-title">입력 직원 유형</div>
-    <div class="screen-sub">기저귀를 제공하는 직원 유형을 선택해 주세요.</div>
-    <div class="option-grid single">
-      <div class="option-card" onclick="selectOption(this,'staffType','행정직원')">
-        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="card-name">행정직원</div>
-        <div class="card-desc">병동 행정 담당자</div>
-      </div>
-      <div class="option-card" onclick="selectOption(this,'staffType','병동직원')">
-        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="card-name">병동직원</div>
-        <div class="card-desc">병동 근무 담당 직원</div>
-      </div>
-      <div class="option-card" onclick="selectOption(this,'staffType','간병사')">
-        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="card-name">간병사</div>
-        <div class="card-desc">환자 직접 간병 담당</div>
-      </div>
-    </div>
-
-    <div class="input-wrap" style="margin-top:16px">
-      <span class="input-label">직원 이름</span>
-      <input type="text" class="text-input" id="staffName" placeholder="이름을 입력하세요" oninput="validateScreen3()">
-    </div>
-  </div>
-
-  <div class="screen" id="screen4">
     <div class="screen-title">사용 환자</div>
     <div class="screen-sub">기저귀를 사용한 환자 이름을 입력해 주세요.</div>
     <div class="input-wrap">
       <span class="input-label">환자 이름</span>
-      <input type="text" class="text-input" id="patientName" placeholder="홍길동" oninput="validateScreen4()" style="font-size:20px;font-weight:700;">
+      <input type="text" class="text-input" id="patientName" placeholder="홍길동" oninput="validateScreen1()" style="font-size:20px;font-weight:700;">
     </div>
     <div class="input-wrap">
       <span class="input-label">환자 번호 (선택)</span>
@@ -748,7 +676,7 @@
     </div>
   </div>
 
-  <div class="screen" id="screen5">
+  <div class="screen" id="screen2">
     <div class="screen-title">기저귀 구분</div>
     <div class="screen-sub">사용한 기저귀 종류를 선택해 주세요.</div>
     <div class="option-grid single">
@@ -775,9 +703,9 @@
     </div>
   </div>
 
-  <div class="screen" id="screen6">
+  <div class="screen" id="screen3">
     <div class="screen-title">기저귀 종류</div>
-    <div class="screen-sub" id="screen6Sub">세부 종류를 선택해 주세요.</div>
+    <div class="screen-sub" id="screen3Sub">세부 종류를 선택해 주세요.</div>
     
     <div class="option-grid single" id="diaperTypeGrid" style="margin-bottom:16px;"></div>
 
@@ -787,7 +715,7 @@
     </div>
   </div>
 
-  <div class="screen" id="screen7">
+  <div class="screen" id="screen4">
     <div class="screen-title">사용 갯수</div>
     <div class="screen-sub">사용한 기저귀 수량을 입력해 주세요.</div>
 
@@ -805,11 +733,83 @@
     </div>
 
     <div class="info-card" style="margin-top:24px;">
-      <div class="screen-title" style="font-size:15px;margin-bottom:12px;">입력 내용 확인</div>
-      <div class="info-row"><span class="info-key">부서</span><span class="info-val" id="rev-dept">-</span></div>
-      <div class="info-row"><span class="info-key">직원</span><span class="info-val" id="rev-staff">-</span></div>
+      <div class="screen-title" style="font-size:15px;margin-bottom:12px;">현재 입력 내용 확인</div>
       <div class="info-row"><span class="info-key">환자</span><span class="info-val" id="rev-patient">-</span></div>
       <div class="info-row"><span class="info-key">기저귀</span><span class="info-val" id="rev-diaper">-</span></div>
+      <div class="info-row"><span class="info-key">부서</span><span class="info-val" id="rev-dept">-</span></div>
+      <div class="info-row"><span class="info-key">직원</span><span class="info-val" id="rev-staff">-</span></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen5">
+    <div class="screen-title">날짜 및 시간</div>
+    <div class="screen-sub">기저귀 사용 날짜와 시간을 확인해 주세요.</div>
+
+    <div class="datetime-card">
+      <div class="dt-date" id="dtDateDisp"></div>
+      <div class="dt-time" id="dtTimeDisp"></div>
+      <div class="dt-edit">
+        <input type="date" id="dtDate">
+        <input type="time" id="dtTime">
+      </div>
+    </div>
+
+    <div class="input-wrap">
+      <span class="input-label">현재 시간으로 자동 설정됩니다. 수정이 필요하면 위에서 변경하세요.</span>
+    </div>
+  </div>
+
+  <div class="screen" id="screen6">
+    <div class="screen-title">사용 부서 선택</div>
+    <div class="screen-sub">환자가 있는 병동을 선택해 주세요.</div>
+    <div class="option-grid">
+      <div class="option-card" onclick="selectOption(this,'dept','2A병동')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">2A병동</div>
+      </div>
+      <div class="option-card" onclick="selectOption(this,'dept','2B병동')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">2B병동</div>
+      </div>
+      <div class="option-card" onclick="selectOption(this,'dept','3A병동')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">3A병동</div>
+      </div>
+      <div class="option-card" onclick="selectOption(this,'dept','3B병동')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">3B병동</div>
+      </div>
+      <div class="option-card" onclick="selectOption(this,'dept','5병동')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">5병동</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen7">
+    <div class="screen-title">입력 직원 유형</div>
+    <div class="screen-sub">기저귀를 제공하는 직원 유형을 선택해 주세요.</div>
+    <div class="option-grid single">
+      <div class="option-card" onclick="selectOption(this,'staffType','행정직원')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">행정직원</div>
+        <div class="card-desc">병동 행정 담당자</div>
+      </div>
+      <div class="option-card" onclick="selectOption(this,'staffType','병동직원')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">병동직원</div>
+        <div class="card-desc">병동 근무 담당 직원</div>
+      </div>
+      <div class="option-card" onclick="selectOption(this,'staffType','간병사')">
+        <div class="check-badge"><svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="card-name">간병사</div>
+        <div class="card-desc">환자 직접 간병 담당</div>
+      </div>
+    </div>
+
+    <div class="input-wrap" style="margin-top:16px">
+      <span class="input-label">직원 이름</span>
+      <input type="text" class="text-input" id="staffName" placeholder="이름을 입력하세요" oninput="validateScreen7()">
     </div>
   </div>
 
@@ -882,7 +882,7 @@ const state = {
   statsFilter: 'all'
 };
 
-// ─── DIAPER DATA (모든 카테고리 정확한 오타 및 텍스트 교정 완료) ───
+// ─── DIAPER DATA ───
 const diaperTypes = {
   '팬티형기저귀': [
     { name: '국산 서림 시그널라인 언더웨어 중형 흡수율780 중형' },
@@ -936,7 +936,7 @@ function updateDateDisplay() {
   const days = ['일','월','화','수','목','금','토'];
   document.getElementById('dtDateDisp').textContent =
     `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
-  document.getElementById('dtTimeDisp').textContent = timeStr = state.data.time;
+  document.getElementById('dtTimeDisp').textContent = state.data.time;
 }
 
 document.getElementById('dtDate').addEventListener('input', function() {
@@ -966,7 +966,6 @@ function goTo(screenNum) {
   window.scrollTo(0, 0);
 }
 
-// 기존 로직 변동 없음 (생략/유지)
 function updateProgress() {
   const pf = document.getElementById('progressFill');
   const sl = document.getElementById('stepLabel');
@@ -1032,14 +1031,13 @@ function toggleMainStats() {
 
 function goNext() {
   if (!canProceed()) return;
-  if (state.currentScreen === 3) {
-    state.data.staffName = document.getElementById('staffName').value.trim();
-  }
-  if (state.currentScreen === 4) {
+  
+  // 변경된 순서에 맞춰 실시간 변수 추출 데이터 셋 연동
+  if (state.currentScreen === 1) {
     state.data.patientName = document.getElementById('patientName').value.trim();
     state.data.patientId = document.getElementById('patientId').value.trim();
   }
-  if (state.currentScreen === 6) {
+  if (state.currentScreen === 3) {
     if (state.data.diaperType === '자가') {
       const customValue = document.getElementById('customDiaperName').value.trim();
       state.data.finalDiaperName = `자가 (${customValue})`;
@@ -1047,34 +1045,39 @@ function goNext() {
       state.data.finalDiaperName = state.data.diaperType;
     }
   }
+  if (state.currentScreen === 7) {
+    state.data.staffName = document.getElementById('staffName').value.trim();
+  }
+
   if (state.currentScreen < state.totalScreens) {
     goTo(state.currentScreen + 1);
-    if (state.currentScreen === 6) populateDiaperTypes();
-    if (state.currentScreen === 7) updateReviewPanel();
+    if (state.currentScreen === 3) populateDiaperTypes();
+    if (state.currentScreen === 4) updateReviewPanel();
   }
 }
 
 function goBack() {
   if (state.currentScreen > 1) {
     goTo(state.currentScreen - 1);
+    if (state.currentScreen === 3) populateDiaperTypes();
   }
 }
 
 function canProceed() {
   const s = state.currentScreen;
-  if (s === 1) return state.data.date !== '' && state.data.time !== '';
-  if (s === 2) return state.data.dept !== '';
-  if (s === 3) return state.data.staffType !== '' && document.getElementById('staffName').value.trim() !== '';
-  if (s === 4) return document.getElementById('patientName').value.trim() !== '';
-  if (s === 5) return state.data.diaperCat !== '';
-  if (s === 6) {
+  if (s === 1) return document.getElementById('patientName').value.trim() !== '';
+  if (s === 2) return state.data.diaperCat !== '';
+  if (s === 3) {
     if (state.data.diaperType === '') return false;
     if (state.data.diaperType === '자가') {
       return document.getElementById('customDiaperName').value.trim() !== '';
     }
     return true;
   }
-  if (s === 7) return state.data.qty > 0;
+  if (s === 4) return state.data.qty > 0;
+  if (s === 5) return state.data.date !== '' && state.data.time !== '';
+  if (s === 6) return state.data.dept !== '';
+  if (s === 7) return state.data.staffType !== '' && document.getElementById('staffName').value.trim() !== '';
   return true;
 }
 
@@ -1084,8 +1087,9 @@ function validateCurrentScreen() {
   btnNext.disabled = !canProceed();
 }
 
-function validateScreen3() { validateCurrentScreen(); }
-function validateScreen4() { validateCurrentScreen(); }
+function validateScreen1() { validateCurrentScreen(); }
+function validateScreen7() { validateCurrentScreen(); }
+// 기저귀 수량 입력시 실시간으로 아래의 리뷰 창 동기화
 function validateCustomDiaper() { validateCurrentScreen(); }
 
 // ─── SELECTION LOGIC ─────────────────────────────────────────
@@ -1115,7 +1119,7 @@ function selectDiaperCat(el, catValue) {
 // ─── DYNAMIC POPULATE ───────────────────────────────────────
 function populateDiaperTypes() {
   const grid = document.getElementById('diaperTypeGrid');
-  const subTitle = document.getElementById('screen6Sub');
+  const subTitle = document.getElementById('screen3Sub');
   const customInputWrap = document.getElementById('customDiaperInputWrap');
   if (!grid) return;
 
@@ -1171,6 +1175,7 @@ function changeQty(amount) {
   if (current > 99) current = 99;
   display.value = current;
   state.data.qty = current;
+  updateReviewPanel();
   validateCurrentScreen();
 }
 
@@ -1178,6 +1183,7 @@ function setQty(val) {
   const display = document.getElementById('qtyDisplay');
   display.value = val;
   state.data.qty = val;
+  updateReviewPanel();
   validateCurrentScreen();
 }
 
@@ -1187,15 +1193,24 @@ function validateQty() {
   if (isNaN(val) || val < 1) val = 1;
   if (val > 99) val = 99;
   state.data.qty = val;
+  updateReviewPanel();
   validateCurrentScreen();
 }
 
 // ─── REVIEW PANEL ─────────────────────────────────────────────
 function updateReviewPanel() {
-  document.getElementById('rev-dept').textContent = state.data.dept || '-';
-  document.getElementById('rev-staff').textContent = state.data.staffName ? `${state.data.staffName} (${state.data.staffType})` : '-';
+  // 실시간 기저귀 이름 추출 적용
+  if (state.data.diaperType === '자가') {
+    const customValue = document.getElementById('customDiaperName').value.trim();
+    state.data.finalDiaperName = `자가 (${customValue})`;
+  } else {
+    state.data.finalDiaperName = state.data.diaperType;
+  }
+  
   document.getElementById('rev-patient').textContent = state.data.patientName ? (state.data.patientName + (state.data.patientId ? ` (${state.data.patientId})` : '')) : '-';
   document.getElementById('rev-diaper').textContent = state.data.finalDiaperName ? `${state.data.finalDiaperName} / ${state.data.qty}개` : '-';
+  document.getElementById('rev-dept').textContent = state.data.dept || '-';
+  document.getElementById('rev-staff').textContent = state.data.staffName ? `${state.data.staffName} (${state.data.staffType})` : '-';
 }
 
 // ─── SAVE & LOCALSTORAGE ──────────────────────────────────────
@@ -1215,6 +1230,9 @@ function loadRecords() {
 function saveRecord() {
   if (!canProceed()) return;
   
+  // 마지마 병동 이름 추출 바인딩 완료
+  state.data.staffName = document.getElementById('staffName').value.trim();
+
   const newRecord = {
     id: Date.now(),
     ...state.data,
