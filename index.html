@@ -1167,6 +1167,7 @@ function selectOption(el, type, value) {
   validateCurrentScreen();
 }
 
+// ─── STAFF TYPE SELECTION LOGIC ─────────────────────────────
 function selectStaffTypeOption(el, value) {
   selectOption(el, 'staffType', value);
   const nameInput = document.getElementById('staffName');
@@ -1367,7 +1368,7 @@ function resetForm() {
   goTo(1);
 }
 
-// ─── STATISTICS & FILTERS ────────────────────────────────────
+// ─── STATISTICS & FILTERS [정합성 버그 전면 전면 수정] ──────
 function showStats() {
   document.getElementById('headerSub').textContent = "사용 통계 분석";
   loadRecords();
@@ -1418,25 +1419,25 @@ function syncCustomFilterState() {
   state.statsFilter = 'custom_range'; 
 }
 
+/* [버그 수정 핵심 핵심 지점] 문자열 파싱 유연화 및 객체 정합성 교정 */
 function getFilteredRecords() {
+  if (state.statsFilter === 'all') {
+    return [...recordsList]; 
+  }
+
   const startInput = document.getElementById('statsStartDate').value;
   const endInput = document.getElementById('statsEndDate').value;
 
+  if (!startInput || !endInput) return [...recordsList];
+
+  // 시간 왜곡 문제를 피하기 위해 날짜 문자열 자체 비교 또는 시간 초기화 처리 적용
+  const startDate = new Date(startInput + 'T00:00:00');
+  const endDate = new Date(endInput + 'T23:59:59');
+
   return recordsList.filter(r => {
-    const rDate = new Date(r.date);
-    rDate.setHours(0,0,0,0);
-    
-    if (state.statsFilter === 'all') return true;
-    
-    if (startInput && endInput) {
-      const startDate = new Date(startInput);
-      const endDate = new Date(endInput);
-      startDate.setHours(0,0,0,0);
-      endDate.setHours(0,0,0,0);
-      return rDate >= startDate && rDate <= endDate;
-    }
-    
-    return true;
+    if (!r.date) return false;
+    const rDate = new Date(r.date + 'T12:00:00'); // 미드데이 세팅으로 시차 오류 사전 예방
+    return rDate >= startDate && rDate <= endDate;
   });
 }
 
@@ -1461,17 +1462,13 @@ function renderStats() {
   }
 
   if (state.statsTab === 'overview') {
-    // 1. 기저귀 구분별 (대분류) 통계 데이터 가공
     const catCounts = { '팬티형기저귀': 0, '겉기저귀': 0, '속기저귀': 0, '위생깔개매트': 0 };
     filtered.forEach(r => {
       if (r.diaperCat in catCounts) {
         catCounts[r.diaperCat] += r.qty;
-      } else {
-        catCounts['기타'] = (catCounts['기타'] || 0) + r.qty;
       }
     });
 
-    // 한글 친화적 명칭 매핑 표기
     const catLabels = { '팬티형기저귀': '팬티형 기저귀', '겉기저귀': '겉 기저귀', '속기저귀': '속 기저귀', '위생깔개매트': '위생 깔개 매트' };
     const mappedCatCounts = {};
     Object.keys(catCounts).forEach(k => {
@@ -1481,14 +1478,12 @@ function renderStats() {
       }
     });
 
-    // 2. 기저귀 상세 종류별 데이터 가공
     const typeCounts = {};
     filtered.forEach(r => { 
       const name = r.finalDiaperName || r.diaperType || '미지정';
       typeCounts[name] = (typeCounts[name] || 0) + r.qty; 
     });
 
-    // [수정 지점] 두 집계 결과를 카드 레이아웃으로 동시에 출력
     let html = '';
     html += createStatCard("기저귀 구분별 집계 (대분류)", mappedCatCounts, 'accent', '구분별');
     html += createStatCard("기저귀 종류별 상세 사용량 (세부)", typeCounts, 'danger', '상세별');
@@ -1561,19 +1556,31 @@ function createStatCard(title, dataObj, colorClass, badgeText) {
     </div>`;
 }
 
-// ─── EXPORT CSV ──────────────────────────────────────────────
+// ─── EXPORT CSV [화면 필터링 데이터와 완벽 연동 완벽 연동하도록 패치] ───
 function exportCSV() {
+  // 이제 화면 통계에 출력되고 있는 동일한 조건의 리스트 배열을 그대로 고스란히 바인딩합니다.
   const filtered = getFilteredRecords();
-  if (filtered.length === 0) return alert('내보낼 기록이 없습니다.');
+  if (filtered.length === 0) return alert('내보낼 기록이 없습니다. 선택한 날짜 범위를 확인하세요.');
 
-  let csvContent = "\uFEFF"; 
+  let csvContent = "\uFEFF"; // 엑셀 한글 깨짐 방지 BOM 추가
   csvContent += "날짜,시간,부서,직원유형,직원이름,환자이름,환자번호,병실,기저귀구분,세부종류,수량\n";
 
   filtered.forEach(r => {
-    const diaperNameDisplay = r.finalDiaperName || r.diaperType;
+    const diaperNameDisplay = r.finalDiaperName || r.diaperType || '-';
+    // 쉼표 오류 및 따옴표 이스케이프 안전 가공
+    const cleanDiaperName = diaperNameDisplay.replace(/"/g, '""');
     const row = [
-      r.date, r.time, r.dept, r.staffType, r.staffName,
-      r.patientName, r.patientId || '-', r.roomNo || '-', r.diaperCat, `"${diaperNameDisplay}"`, r.qty
+      r.date || '-', 
+      r.time || '-', 
+      r.dept || '-', 
+      r.staffType || '-', 
+      r.staffName || '-',
+      r.patientName || '-', 
+      r.patientId || '-', 
+      r.roomNo || '-', 
+      r.diaperCat || '-', 
+      `"${cleanDiaperName}"`, 
+      r.qty
     ];
     csvContent += row.join(",") + "\n";
   });
