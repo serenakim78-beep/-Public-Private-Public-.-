@@ -195,7 +195,7 @@
   }
   .text-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.10); }
 
-  /* QUANTITY PICKER (수량 1~10 탭 및 +,- 복원) */
+  /* QUANTITY PICKER */
   .qty-wrap { display: flex; align-items: center; gap: 0; border: 2px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface2); }
   .qty-btn { width: 56px; height: 60px; border: none; background: transparent; font-size: 24px; font-weight: 300; color: var(--primary); cursor: pointer; }
   .qty-display { flex: 1; text-align: center; font-size: 28px; font-weight: 700; color: var(--text); border: none; background: transparent; outline: none; }
@@ -255,7 +255,7 @@
   .success-actions { display: flex; gap: 10px; width: 100%; margin-top: 8px; }
   .btn-primary-solid { flex: 1; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer; }
 
-  /* STATISTICS SCREEN (통계 화면 UI 복원) */
+  /* STATISTICS SCREEN */
   .stats-filter-card { background: var(--surface2); border: 2px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
   .stats-date-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
   .stats-date-row input { flex: 1; border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 14px; outline: none; font-family: inherit; text-align: center; background: white; }
@@ -450,17 +450,14 @@
 </div>
 
 <script>
-// ⭐ [가장 중요] 여기에 깃허브 업로드 전 1단계에서 딴 구글 웹 앱 주소를 꼭 채워 넣어주세요!
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwNjY1dGgkZfIYs90SrejzIhyGRKp_p0E6UUch9_kri0WIl_8UtNW1NwrLNAnrXkbN/exec";
+// ⭐여기에 구글 웹 앱 배포 URL 주소를 꼭 다시 넣어주세요!
+const GOOGLE_SCRIPT_URL = "여기에_구글_웹_앱_주소를_넣으세요";
 
 const state = {
   currentScreen: 1,
   totalScreens: 7,
   data: { date: '', time: '', dept: '', staffType: '', staffName: '', patientName: '', patientId: '', roomNo: '', diaperCat: '', diaperType: '', qty: 1 }
 };
-
-// 자체 앱 메모리에 실시간 누적 저장하기 위한 안전장치 저장소 구조화
-let localDatabase = JSON.parse(localStorage.getItem('diaper_local_db')) || [];
 
 const diaperTypes = {
   '팬티형기저귀': [{name:'서림 중형'}, {name:'서림 대형'}, {name:'서림 특대'}, {name:'테나 중형'}, {name:'라이프리 중형'}, {name:'디펜드 중형'}, {name:'자가'}],
@@ -480,7 +477,6 @@ function init() {
   document.getElementById('dtDate').value = state.data.date;
   document.getElementById('dtTime').value = state.data.time;
   
-  // 통계 날짜 기본값 당일 설정
   document.getElementById('statsStartDate').value = state.data.date;
   document.getElementById('statsEndDate').value = state.data.date;
   
@@ -496,7 +492,6 @@ function updateDateDisplay() {
 document.getElementById('dtDate').addEventListener('input', function() { state.data.date = this.value; updateDateDisplay(); });
 document.getElementById('dtTime').addEventListener('input', function() { state.data.time = this.value; updateDateDisplay(); });
 
-/* 대시보드 메인 메뉴 탭 전환 매커니즘 보존 및 구현 */
 function switchMainTab(tab) {
   const btnRecord = document.getElementById('tab-record');
   const btnStats = document.getElementById('tab-stats');
@@ -513,7 +508,6 @@ function switchMainTab(tab) {
     btnStats.classList.add('active');
     areaRecord.style.display = 'none';
     areaStats.style.display = 'flex';
-    loadStatistics(); // 통계 탭을 누르면 자동으로 즉시 통계 연산 수행되도록 연동 보완
   }
 }
 
@@ -598,14 +592,12 @@ function selectOption(field, val, el) {
   validateCurrentScreen();
 }
 
-/* 갯수 조정용 피커 핵심 메커니즘 수량 증감 에러 해결 보완 */
 function changeQty(n) {
   const disp = document.getElementById('qtyDisplay');
   let val = (parseInt(disp.value) || 1) + n;
   if(val < 1) val = 1;
   disp.value = val;
   
-  // 프리셋 탭 활성화 유무 연동 처리 고정
   const presetBtns = document.querySelectorAll('.qty-preset-btn');
   presetBtns.forEach(btn => btn.classList.remove('selected'));
   if (val <= 10) {
@@ -614,7 +606,6 @@ function changeQty(n) {
   validateCurrentScreen();
 }
 
-/* 1개~10개 프리셋 탭 누르기 액션 매커니즘 */
 function setPresetQty(num, btnElement) {
   document.getElementById('qtyDisplay').value = num;
   const presetBtns = document.querySelectorAll('.qty-preset-btn');
@@ -628,11 +619,6 @@ function saveDataToGoogle() {
   state.data.patientId = document.getElementById('patientId').value;
   state.data.roomNo = document.getElementById('roomNo').value;
 
-  // 구글 전송 시점에 로컬 하이브리드 데이터베이스 시스템에 동시 복제 세이브
-  const dataCopy = JSON.parse(JSON.stringify(state.data));
-  localDatabase.push(dataCopy);
-  localStorage.setItem('diaper_local_db', JSON.stringify(localDatabase));
-
   fetch(GOOGLE_SCRIPT_URL, {
     method: "POST",
     mode: "no-cors",
@@ -645,14 +631,13 @@ function saveDataToGoogle() {
     document.getElementById('successActions').style.display = 'flex';
   })
   .catch(err => {
-    // 주소 에러나 인터넷 순단 지연시에도 완벽 보장
-    document.getElementById('saveStatusTitle').textContent = "저장 완료!";
-    document.getElementById('saveStatusSub').textContent = "기록이 전송 및 로컬 통계 데이터베이스에 반영되었습니다.";
+    document.getElementById('saveStatusTitle').textContent = "전송 지연";
+    document.getElementById('saveStatusSub').textContent = "인터넷 연결을 확인하거나 주소 설정을 확인하세요.";
     document.getElementById('successActions').style.display = 'flex';
   });
 }
 
-/* 실시간 하이브리드 파싱 통계 집계 엔진 고정화 완료 */
+/* 통계 데이터 집계 처리 전면 보완 고정 */
 function loadStatistics() {
   const start = document.getElementById('statsStartDate').value;
   const end = document.getElementById('statsEndDate').value;
@@ -662,90 +647,83 @@ function loadStatistics() {
     return;
   }
 
-  document.getElementById('stats-initial-msg').style.display = 'none';
-  document.getElementById('stats-loading-msg').style.display = 'none';
-  document.getElementById('stats-result-container').style.display = 'block';
-
-  // 집계용 객체 생성
-  const sumDept = {};
-  const sumPatient = {};
-  const sumType = {};
-
-  // 구글 시트 웹앱 GET 응답 지연 한계 극복을 위한 로컬 영구 디비 루프 연산 처리
-  localDatabase.forEach(item => {
-    let itemDate = item.date;
-    if (itemDate && itemDate.includes('T')) {
-      itemDate = itemDate.split('T')[0];
-    }
-    
-    if (itemDate && itemDate >= start && itemDate <= end) {
-      const qty = parseInt(item.qty) || 0;
-
-      if(item.dept) {
-        sumDept[item.dept] = (sumDept[item.dept] || 0) + qty;
-      }
-      if(item.patientName) {
-        const pKey = `${item.patientName}(${item.roomNo || '미지정'}호)`;
-        sumPatient[pKey] = (sumPatient[pKey] || 0) + qty;
-      }
-      if(item.diaperType) {
-        sumType[item.diaperType] = (sumType[item.diaperType] || 0) + qty;
-      }
-    }
-  });
-
-  // 외부 구글 시트 원격 데이터 통신 병합 파싱 연산 시도 (네트워크 지연대비 백그라운드 구동)
-  if(GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "여기에_구글_웹_앱_주소를_넣으세요") {
-    fetch(GOOGLE_SCRIPT_URL)
-      .then(res => res.json())
-      .then(rows => {
-        if(Array.isArray(rows) && rows.length > 0) {
-          // 중복 방지를 위한 실시간 초기화 및 전면 재연산
-          const netDept = {}; const netPatient = {}; const netType = {};
-          rows.forEach(item => {
-            let itemDate = item.date;
-            if (itemDate && itemDate.includes('T')) itemDate = itemDate.split('T')[0];
-            if (itemDate && itemDate >= start && itemDate <= end) {
-              const qty = parseInt(item.qty) || 0;
-              if(item.dept) netDept[item.dept] = (netDept[item.dept] || 0) + qty;
-              if(item.patientName) {
-                const pKey = `${item.patientName}(${item.roomNo || '미지정'}호)`;
-                netPatient[pKey] = (netPatient[pKey] || 0) + qty;
-              }
-              if(item.diaperType) netType[item.diaperType] = (netType[item.diaperType] || 0) + qty;
-            }
-          });
-          // 로컬 데이터보다 원격 구글시트 데이터 우선 병합 스위칭
-          if(Object.keys(netDept).length > 0) {
-            renderStatsList('stats-dept-list', netDept);
-            renderStatsList('stats-patient-list', netPatient);
-            renderStatsList('stats-type-list', netType);
-            return;
-          }
-        }
-      }).catch(e => console.log("원격 시트 로딩 대기 수신: 내장 원본 데이터 출력 전환"));
+  if(!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("여기에_구글")) {
+    alert("구글 웹 앱 주소(URL) 설정이 유효하지 않습니다.");
+    return;
   }
 
-  // UI 렌더링 헬퍼 함수 호출 고정
-  const renderStatsList = (targetId, dataObj) => {
-    const wrapper = document.getElementById(targetId);
-    wrapper.innerHTML = '';
-    const keys = Object.keys(dataObj);
-    if(keys.length === 0) {
-      wrapper.innerHTML = '<div class="stats-empty-msg">해당 기간 내 데이터가 없습니다.</div>';
-      return;
-    }
-    keys.forEach(k => {
-      const row = document.createElement('div');
-      row.className = 'stats-data-row';
-      row.innerHTML = `<span class="stats-data-name">${k}</span><span class="stats-data-count">${dataObj[k]}개</span>`;
-      wrapper.appendChild(row);
-    });
-  };
+  document.getElementById('stats-initial-msg').style.display = 'none';
+  document.getElementById('stats-loading-msg').style.display = 'block';
+  document.getElementById('stats-result-container').style.display = 'none';
 
-  renderStatsList('stats-dept-list', sumDept);
-  renderStatsList('stats-patient-list', sumPatient);
-  renderStatsList('stats-type-list', sumType);
+  // 원격 구글 스프레드시트 완전 동기화 연산
+  fetch(GOOGLE_SCRIPT_URL)
+    .then(res => res.json())
+    .then(rows => {
+      document.getElementById('stats-loading-msg').style.display = 'none';
+      document.getElementById('stats-result-container').style.display = 'block';
+
+      const sumDept = {};
+      const sumPatient = {};
+      const sumType = {};
+
+      rows.forEach(item => {
+        let itemDate = item.date;
+        if (itemDate && typeof itemDate === 'string') {
+          if (itemDate.includes('T')) itemDate = itemDate.split('T')[0];
+          itemDate = itemDate.replace(/[^0-9-]/g, '').trim(); 
+        } else if (itemDate) {
+          // 날짜 객체 또는 숫자로 들어오는 예외 방어
+          try {
+            let d = new Date(itemDate);
+            let pad = (n) => String(n).padStart(2, '0');
+            itemDate = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+          } catch(e) {}
+        }
+        
+        // 날짜 필터링 범위 가공
+        if (itemDate && itemDate >= start && itemDate <= end) {
+          const qty = parseInt(item.qty) || 0;
+
+          if(item.dept) {
+            sumDept[item.dept] = (sumDept[item.dept] || 0) + qty;
+          }
+          if(item.patientName) {
+            const pKey = `${item.patientName}(${item.roomNo ? item.roomNo + '호' : '미지정'})`;
+            sumPatient[pKey] = (sumPatient[pKey] || 0) + qty;
+          }
+          if(item.diaperType) {
+            sumType[item.diaperType] = (sumType[item.diaperType] || 0) + qty;
+          }
+        }
+      });
+
+      const renderStatsList = (targetId, dataObj) => {
+        const wrapper = document.getElementById(targetId);
+        wrapper.innerHTML = '';
+        const keys = Object.keys(dataObj);
+        if(keys.length === 0) {
+          wrapper.innerHTML = '<div class="stats-empty-msg">해당 기간 내 데이터가 없습니다.</div>';
+          return;
+        }
+        keys.forEach(k => {
+          const row = document.createElement('div');
+          row.className = 'stats-data-row';
+          row.innerHTML = `<span class="stats-data-name">${k}</span><span class="stats-data-count">${dataObj[k]}개</span>`;
+          wrapper.appendChild(row);
+        });
+      };
+
+      renderStatsList('stats-dept-list', sumDept);
+      renderStatsList('stats-patient-list', sumPatient);
+      renderStatsList('stats-type-list', sumType);
+    })
+    .catch(err => {
+      document.getElementById('stats-loading-msg').style.display = 'none';
+      document.getElementById('stats-initial-msg').style.display = 'block';
+      document.getElementById('stats-initial-msg').textContent = "데이터 읽기 오류가 발생했습니다. 구글 앱스 스크립트 배포 상태와 URL 주소를 다시 한번 확인해 주세요.";
+      console.error(err);
+    });
 }
 
 function resetForm() {
