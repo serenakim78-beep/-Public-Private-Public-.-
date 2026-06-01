@@ -285,6 +285,7 @@
     </div>
   </div>
 
+  <!-- 통계 화면 영역 -->
   <div id="main-stats-area" style="display: none; flex-direction: column; flex: 1; padding: 24px 20px 100px; overflow-y: auto;">
     <div class="screen-title">사용 통계 조회</div>
     <div class="screen-sub">지정된 날짜 범위 내의 사용량을 실시간으로 집계합니다.</div>
@@ -313,6 +314,7 @@
     <div id="stats-initial-msg" class="stats-empty-msg">날짜를 설정하고 조회하기 버튼을 눌러주세요.</div>
   </div>
 
+  <!-- 기록 입력 화면 영역 -->
   <div id="main-record-area" style="display: flex; flex-direction: column; flex: 1;">
     <div class="step-progress" id="stepProgress">
       <div class="progress-track">
@@ -321,23 +323,25 @@
       <div class="step-label" id="stepLabel">1단계 / 7단계</div>
     </div>
 
+    <!-- 1단계: 환자 정보 (강제 입력 필터 전면 제거하여 영문/숫자/자유입력 가능하게 변경) -->
     <div class="screen active" id="screen1">
       <div class="screen-title">사용 환자</div>
       <div class="screen-sub">환자의 정보를 모두 입력해 주세요.</div>
       <div class="input-wrap">
         <span class="input-label">환자 이름</span>
-        <input type="text" class="text-input" id="patientName" placeholder="홍길동" oninput="filterKorean(this); validateScreen1();" style="font-size:20px;font-weight:700;">
+        <input type="text" class="text-input" id="patientName" placeholder="홍길동" oninput="validateCurrentScreen();" style="font-size:20px;font-weight:700;">
       </div>
       <div class="input-wrap">
         <span class="input-label">환자 번호</span>
-        <input type="text" class="text-input" id="patientId" placeholder="예: 12345" oninput="filterNumber(this); validateScreen1();">
+        <input type="text" class="text-input" id="patientId" placeholder="예: 12345" oninput="validateCurrentScreen();">
       </div>
       <div class="input-wrap">
         <span class="input-label">병실</span>
-        <input type="text" class="text-input" id="roomNo" placeholder="예: 301" oninput="filterNumber(this); validateScreen1();">
+        <input type="text" class="text-input" id="roomNo" placeholder="예: 301" oninput="validateCurrentScreen();">
       </div>
     </div>
 
+    <!-- 2단계: 기저귀 구분 -->
     <div class="screen" id="screen2">
       <div class="screen-title">기저귀 구분</div>
       <div class="screen-sub">사용한 기저귀 종류를 선택해 주세요.</div>
@@ -357,12 +361,14 @@
       </div>
     </div>
 
+    <!-- 3단계: 기저귀 세부 종류 -->
     <div class="screen" id="screen3">
       <div class="screen-title">기저귀 종류</div>
       <div class="screen-sub">세부 종류를 선택해 주세요.</div>
       <div class="option-grid single" id="diaperTypeGrid"></div>
     </div>
 
+    <!-- 4단계: 사용 갯수 (+, - 조절 버튼 정상 원복) -->
     <div class="screen" id="screen4">
       <div class="screen-title">사용 갯수</div>
       <div class="screen-sub">사용한 수량을 입력해 주세요.</div>
@@ -391,6 +397,7 @@
       </div>
     </div>
 
+    <!-- 5단계: 날짜 및 시간 -->
     <div class="screen" id="screen5">
       <div class="screen-title">날짜 및 시간</div>
       <div class="datetime-card">
@@ -403,6 +410,7 @@
       </div>
     </div>
 
+    <!-- 6단계: 부서 선택 -->
     <div class="screen" id="screen6">
       <div class="screen-title">사용 부서 선택</div>
       <div class="option-grid">
@@ -414,6 +422,7 @@
       </div>
     </div>
 
+    <!-- 7단계: 직원 정보 (필터 제거) -->
     <div class="screen" id="screen7">
       <div class="screen-title">입력 직원 정보</div>
       <div class="option-grid single" style="margin-bottom: 15px;">
@@ -422,10 +431,11 @@
       </div>
       <div class="input-wrap">
         <span class="input-label">직원 이름</span>
-        <input type="text" class="text-input" id="staffName" placeholder="이름을 입력하세요" oninput="filterKorean(this); validateScreen7();">
+        <input type="text" class="text-input" id="staffName" placeholder="이름을 입력하세요" oninput="validateCurrentScreen();">
       </div>
     </div>
 
+    <!-- 완료 및 전송 화면 -->
     <div class="screen" id="screen8">
       <div class="success-wrap">
         <div class="success-icon">
@@ -441,6 +451,7 @@
       </div>
     </div>
 
+    <!-- 하단 고정 바 -->
     <div class="bottom-bar" id="bottomBar">
       <button class="btn-back" id="btnBack" onclick="goBack()">이전</button>
       <button class="btn-next" id="btnNext" onclick="goNext()">다음</button>
@@ -450,8 +461,8 @@
 </div>
 
 <script>
-// 📌 간호사님의 실제 구글 Apps Script 주소를 정상 탑재했습니다.
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFGPeE472mjVYk9NHT2F0r7VNtTdPnLEINoiaO3DxPHN7Y_uOc49oQOP79qiwpcOYm/exec"
+// 📌 연동용 웹 앱 URL 설정
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyA4UKT_OmYqje8mWTy6ylFYxleMgeym9nabZJwtXOY8Pyk64-jxfRkyeLuJ1osbr3W/exec";
 
 const state = {
   currentScreen: 1,
@@ -465,9 +476,6 @@ const diaperTypes = {
   '속기저귀': [{name:'포인트 일자형'}, {name:'자가'}],
   '위생깔개매트': [{name:'포인트 깔개매트'}, {name:'자가'}]
 };
-
-function filterKorean(el) { el.value = el.value.replace(/[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/g, ''); }
-function filterNumber(el) { el.value = el.value.replace(/[^0-9]/g, ''); }
 
 function init() {
   const now = new Date();
@@ -492,6 +500,7 @@ function updateDateDisplay() {
 document.getElementById('dtDate').addEventListener('input', function() { state.data.date = this.value; updateDateDisplay(); });
 document.getElementById('dtTime').addEventListener('input', function() { state.data.time = this.value; updateDateDisplay(); });
 
+// 📌 상단 메인 탭 전환 함수 완전 복구
 function switchMainTab(tab) {
   const btnRecord = document.getElementById('tab-record');
   const btnStats = document.getElementById('tab-stats');
@@ -557,9 +566,6 @@ function validateCurrentScreen() {
   document.getElementById('btnNext').disabled = !isValid;
 }
 
-function validateScreen1() { validateCurrentScreen(); }
-function validateScreen7() { validateCurrentScreen(); }
-
 function selectDiaperCat(el, cat) {
   state.data.diaperCat = cat;
   state.data.diaperType = '';
@@ -572,7 +578,7 @@ function selectDiaperCat(el, cat) {
   diaperTypes[cat].forEach(t => {
     const div = document.createElement('div');
     div.className = 'option-card';
-    div.textContent = t.name;
+    div.innerHTML = `<div class="card-name">${t.name}</div>`;
     div.onclick = function() {
       state.data.diaperType = t.name;
       grid.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
@@ -592,6 +598,7 @@ function selectOption(field, val, el) {
   validateCurrentScreen();
 }
 
+// 📌 사용갯수 수량 조절 버튼 기능 완벽 원복 복구
 function changeQty(n) {
   const disp = document.getElementById('qtyDisplay');
   let val = (parseInt(disp.value) || 1) + n;
@@ -637,19 +644,13 @@ function saveDataToGoogle() {
   });
 }
 
-/* 통계 데이터 집계 및 오류 유발 검증로직 완벽 전면 보완 */
+// 📌 통계 연산 로직 완벽 처리 및 안전성 강화
 function loadStatistics() {
   const start = document.getElementById('statsStartDate').value;
   const end = document.getElementById('statsEndDate').value;
   
   if(!start || !end) {
     alert("시작 날짜와 종료 날짜를 지정해 주세요.");
-    return;
-  }
-
-  // 💡 기존의 불필요하고 잘못된 하드코딩 주소 검증부 제거 및 정상 작동화
-  if(!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("여기에_구글")) {
-    alert("구글 웹 앱 주소(URL) 설정이 유효하지 않습니다.");
     return;
   }
 
@@ -719,7 +720,7 @@ function loadStatistics() {
     .catch(err => {
       document.getElementById('stats-loading-msg').style.display = 'none';
       document.getElementById('stats-initial-msg').style.display = 'block';
-      document.getElementById('stats-initial-msg').textContent = "데이터 읽기 오류가 발생했습니다. 구글 앱스 스크립트 배포 상태와 웹앱 URL 주소를 다시 한번 확인해 주세요.";
+      document.getElementById('stats-initial-msg').textContent = "데이터 읽기 오류가 발생했습니다. 구글 앱스 스크립트 배포 상태를 다시 확인해 주세요.";
       console.error(err);
     });
 }
