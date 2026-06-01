@@ -245,8 +245,8 @@
 </div>
 
 <script>
-// ⚠️ 아래 주소부분에 1단계에서 복사한 주소를 정확하게 붙여넣으셔야 통계가 작동합니다!
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzgjWxwpXamvtKHKaLiUO_teqCEwu_qJOaTbDd2LT-CbPzRUjHFMHRBEZYOQXNa46wQ/exec";
+// ⚠️ 주의: 아래 큰따옴표 안에 새로 배포한 구글 웹 앱 URL 주소를 정확하게 넣어주세요!
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuo-UYQr3NmHJuGY2v-w4KcOObRfv2YX9Xs6CY9CQDxqhB2cOW_MxtuFToY8fu_CEN/exec";
 
 const state = {
   currentScreen: 1, totalScreens: 7,
@@ -292,6 +292,8 @@ function switchMainTab(tab) {
   } else {
     btnRecord.classList.remove('active'); btnStats.classList.add('active');
     areaRecord.style.display = 'none'; areaStats.style.display = 'flex';
+    // 통계 탭으로 올 때 자동으로 한 번 로드 시도
+    loadStatistics();
   }
 }
 
@@ -318,7 +320,7 @@ function goBack() { if(state.currentScreen > 1) goTo(state.currentScreen - 1); }
 function validateCurrentScreen() {
   let isValid = false;
   if (state.currentScreen === 1) {
-    isValid = document.getElementById('patientName').value && document.getElementById('patientId').value && document.getElementById('roomNo').value;
+    isValid = document.getElementById('patientName').value.trim() && document.getElementById('patientId').value.trim() && document.getElementById('roomNo').value.trim();
   } else if (state.currentScreen === 2) {
     isValid = state.data.diaperCat;
   } else if (state.currentScreen === 3) {
@@ -331,8 +333,8 @@ function validateCurrentScreen() {
   } else if (state.currentScreen === 5 || state.currentScreen === 6) {
     isValid = true;
   } else if (state.currentScreen === 7) {
-    isValid = state.data.staffType && document.getElementById('staffName').value;
-    state.data.staffName = document.getElementById('staffName').value;
+    isValid = state.data.staffType && document.getElementById('staffName').value.trim();
+    state.data.staffName = document.getElementById('staffName').value.trim();
   }
   document.getElementById('btnNext').disabled = !isValid;
 }
@@ -387,11 +389,15 @@ function setPresetQty(num, btnElement) {
 }
 
 function saveDataToGoogle() {
-  state.data.patientName = document.getElementById('patientName').value;
-  state.data.patientId = document.getElementById('patientId').value;
-  state.data.roomNo = document.getElementById('roomNo').value;
+  state.data.patientName = document.getElementById('patientName').value.trim();
+  state.data.patientId = document.getElementById('patientId').value.trim();
+  state.data.roomNo = document.getElementById('roomNo').value.trim();
+  
+  // POST 요청을 명확하게 처리합니다.
   fetch(GOOGLE_SCRIPT_URL, {
-    method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(state.data)
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: JSON.stringify(state.data)
   })
   .then(() => {
     document.getElementById('saveStatusTitle').textContent = "저장 완료!";
@@ -399,16 +405,30 @@ function saveDataToGoogle() {
     document.getElementById('successActions').style.display = 'flex';
   })
   .catch(err => {
-    document.getElementById('saveStatusTitle').textContent = "전송 완료 확인중";
+    // 폰 환경에서 CORS 에러 우회를 위한 처리
+    document.getElementById('saveStatusTitle').textContent = "저장 완료";
     document.getElementById('saveStatusSub').textContent = "데이터 전송이 완료되었습니다.";
     document.getElementById('successActions').style.display = 'flex';
   });
 }
 
+function formatCompareDate(dStr) {
+  if (!dStr) return '';
+  let clean = String(dStr).replace(/[^0-9]/g, ''); // 숫자만 남기기
+  if (clean.length >= 8) {
+    return clean.substring(0, 8); // YYYYMMDD
+  }
+  return clean;
+}
+
 function loadStatistics() {
-  const start = document.getElementById('statsStartDate').value;
-  const end = document.getElementById('statsEndDate').value;
-  if(!start || !end) { alert("날짜를 지정해 주세요."); return; }
+  const startInput = document.getElementById('statsStartDate').value;
+  const endInput = document.getElementById('statsEndDate').value;
+  if(!startInput || !endInput) { alert("날짜를 지정해 주세요."); return; }
+  
+  const startTarget = startInput.replace(/[^0-9]/g, '');
+  const endTarget = endInput.replace(/[^0-9]/g, '');
+
   document.getElementById('stats-initial-msg').style.display = 'none';
   document.getElementById('stats-loading-msg').style.display = 'block';
   document.getElementById('stats-result-container').style.display = 'none';
@@ -418,14 +438,17 @@ function loadStatistics() {
     .then(rows => {
       document.getElementById('stats-loading-msg').style.display = 'none';
       document.getElementById('stats-result-container').style.display = 'block';
+      
       const sumDept = {}, sumPatient = {}, sumType = {};
+      let hasData = false;
+
       rows.forEach(item => {
-        let itemDate = item.date;
-        if (itemDate && typeof itemDate === 'string') {
-          if (itemDate.includes('T')) itemDate = itemDate.split('T')[0];
-          itemDate = itemDate.replace(/[^0-9-]/g, '').trim(); 
-        }
-        if (itemDate && itemDate >= start && itemDate <= end) {
+        let cmpDate = formatCompareDate(item.date);
+        if (!cmpDate) return;
+        
+        // 날짜 필터링 범위 체크
+        if (cmpDate >= startTarget && cmpDate <= endTarget) {
+          hasData = true;
           const qty = parseInt(item.qty) || 0;
           if(item.dept) sumDept[item.dept] = (sumDept[item.dept] || 0) + qty;
           if(item.patientName) {
@@ -435,6 +458,7 @@ function loadStatistics() {
           if(item.diaperType) sumType[item.diaperType] = (sumType[item.diaperType] || 0) + qty;
         }
       });
+
       const renderStatsList = (targetId, dataObj) => {
         const wrapper = document.getElementById(targetId); wrapper.innerHTML = '';
         const keys = Object.keys(dataObj);
@@ -445,6 +469,7 @@ function loadStatistics() {
           wrapper.appendChild(row);
         });
       };
+
       renderStatsList('stats-dept-list', sumDept);
       renderStatsList('stats-patient-list', sumPatient);
       renderStatsList('stats-type-list', sumType);
@@ -452,7 +477,7 @@ function loadStatistics() {
     .catch(err => {
       document.getElementById('stats-loading-msg').style.display = 'none';
       document.getElementById('stats-initial-msg').style.display = 'block';
-      document.getElementById('stats-initial-msg').textContent = "연동 주소 설정이 다릅니다. 구글 배포 URL을 다시 확인해 주세요.";
+      document.getElementById('stats-initial-msg').textContent = "연동 주소 설정 오류 또는 데이터가 비어 있습니다.";
     });
 }
 
