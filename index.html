@@ -46,11 +46,11 @@
     overflow: hidden;
   }
 
-  /* HEADER */
+  /* HEADER & TABS */
   .header {
     background: var(--primary);
     color: white;
-    padding: 18px 20px 14px;
+    padding: 18px 20px 0;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -60,6 +60,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding-bottom: 12px;
   }
   .header-title {
     font-size: 18px;
@@ -71,43 +72,56 @@
     opacity: 0.8;
     margin-top: 2px;
   }
-  .header-btn {
-    background: rgba(255,255,255,0.18);
+  
+  /* 상단 탭 메뉴 버튼 */
+  .header-tabs {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .nav-tab-btn {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.15);
     border: none;
-    color: white;
-    border-radius: 8px;
-    padding: 8px 13px;
-    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 10px;
+    font-size: 14px;
     font-weight: 600;
     font-family: 'Noto Sans KR', sans-serif;
+    border-radius: 8px 8px 0 0;
     cursor: pointer;
-    transition: background 0.18s;
+    transition: all 0.2s;
+    text-align: center;
   }
-  .header-btn:active { background: rgba(255,255,255,0.3); }
+  .nav-tab-btn.active {
+    background: var(--surface);
+    color: var(--primary);
+  }
 
   /* STEP PROGRESS */
   .step-progress {
-    background: var(--primary);
-    padding: 0 20px 14px;
+    background: var(--surface2);
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
   }
   .progress-track {
-    background: rgba(255,255,255,0.25);
+    background: var(--border);
     border-radius: 100px;
     height: 4px;
     width: 100%;
     overflow: hidden;
   }
   .progress-fill {
-    background: white;
+    background: var(--primary);
     height: 100%;
     border-radius: 100px;
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .step-label {
-    color: rgba(255,255,255,0.85);
+    color: var(--text2);
     font-size: 11px;
     margin-top: 6px;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   /* SCREENS */
@@ -169,27 +183,7 @@
     color: var(--text);
     line-height: 1.4;
   }
-  .option-card .card-desc {
-    font-size: 11px;
-    color: var(--text2);
-    margin-top: 2px;
-    line-height: 1.4;
-  }
   .option-card.selected .card-name { color: var(--primary); }
-  .check-badge {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 18px;
-    height: 18px;
-    background: var(--primary);
-    border-radius: 50%;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-  .option-card.selected .check-badge { display: flex; }
-  .check-badge svg { width: 10px; height: 10px; }
 
   /* TEXT INPUT */
   .input-wrap { margin-bottom: 16px; }
@@ -201,12 +195,35 @@
   }
   .text-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.10); }
 
-  /* QUANTITY PICKER */
+  /* QUANTITY PICKER (수량 1~10 탭 및 +,- 복원) */
   .qty-wrap { display: flex; align-items: center; gap: 0; border: 2px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface2); }
   .qty-btn { width: 56px; height: 60px; border: none; background: transparent; font-size: 24px; font-weight: 300; color: var(--primary); cursor: pointer; }
   .qty-display { flex: 1; text-align: center; font-size: 28px; font-weight: 700; color: var(--text); border: none; background: transparent; outline: none; }
-  .qty-presets { display: flex; gap: 8px; margin-top: 10px; }
-  .qty-preset { flex: 1; border: 2px solid var(--border); border-radius: 8px; padding: 8px; text-align: center; font-size: 14px; font-weight: 600; color: var(--text2); background: var(--surface2); cursor: pointer; }
+  
+  .qty-presets-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+    margin-bottom: 8px;
+  }
+  .qty-preset-btn {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 0;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text2);
+    background: var(--surface2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .qty-preset-btn.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+  }
 
   /* DATETIME DISPLAY */
   .datetime-card { background: var(--primary); border-radius: var(--radius); padding: 20px; color: white; margin-bottom: 20px; }
@@ -229,15 +246,27 @@
   .btn-next { flex: 1; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(37,99,235,0.28); }
   .btn-next:disabled { background: var(--border); color: var(--text3); box-shadow: none; cursor: not-allowed; }
 
-  /* SUCCESS */
+  /* SUCCESS SCREEN */
   .success-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; padding: 40px 20px; }
   .success-icon { width: 80px; height: 80px; background: var(--accent-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
   .success-icon svg { color: var(--accent); }
   .success-title { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
   .success-sub { font-size: 14px; color: var(--text2); line-height: 1.7; }
-  .success-summary { background: var(--surface2); border-radius: var(--radius); padding: 16px 20px; margin: 20px 0; text-align: left; width: 100%; }
   .success-actions { display: flex; gap: 10px; width: 100%; margin-top: 8px; }
   .btn-primary-solid { flex: 1; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+  /* STATISTICS SCREEN (통계 화면 UI 복원) */
+  .stats-filter-card { background: var(--surface2); border: 2px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
+  .stats-date-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .stats-date-row input { flex: 1; border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 14px; outline: none; font-family: inherit; text-align: center; background: white; }
+  .btn-stats-search { width: 100%; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  
+  .stats-section-title { font-size: 16px; font-weight: 700; color: var(--text); margin: 20px 0 10px; padding-left: 4px; border-left: 4px solid var(--primary); }
+  .stats-data-list { display: flex; flex-direction: column; gap: 8px; }
+  .stats-data-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 16px; border: 1px solid var(--border); }
+  .stats-data-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .stats-data-count { font-size: 15px; font-weight: 700; color: var(--primary); }
+  .stats-empty-msg { text-align: center; color: var(--text3); font-size: 13px; padding: 30px 0; }
 </style>
 </head>
 <body>
@@ -250,130 +279,178 @@
         <div class="header-sub">요양병원 스마트 기록 시스템</div>
       </div>
     </div>
-  </div>
-
-  <div class="step-progress" id="stepProgress">
-    <div class="progress-track">
-      <div class="progress-fill" id="progressFill" style="width:14%"></div>
-    </div>
-    <div class="step-label" id="stepLabel">1단계 / 7단계</div>
-  </div>
-
-  <div class="screen active" id="screen1">
-    <div class="screen-title">사용 환자</div>
-    <div class="screen-sub">환자의 정보를 모두 입력해 주세요.</div>
-    <div class="input-wrap">
-      <span class="input-label">환자 이름</span>
-      <input type="text" class="text-input" id="patientName" placeholder="홍길동" oninput="filterKorean(this); validateScreen1();" style="font-size:20px;font-weight:700;">
-    </div>
-    <div class="input-wrap">
-      <span class="input-label">환자 번호</span>
-      <input type="text" class="text-input" id="patientId" placeholder="예: 12345" oninput="filterNumber(this); validateScreen1();">
-    </div>
-    <div class="input-wrap">
-      <span class="input-label">병실</span>
-      <input type="text" class="text-input" id="roomNo" placeholder="예: 301" oninput="filterNumber(this); validateScreen1();">
+    <div class="header-tabs">
+      <button class="nav-tab-btn active" id="tab-record" onclick="switchMainTab('record')">기저귀 기록</button>
+      <button class="nav-tab-btn" id="tab-stats" onclick="switchMainTab('stats')">통계 확인</button>
     </div>
   </div>
 
-  <div class="screen" id="screen2">
-    <div class="screen-title">기저귀 구분</div>
-    <div class="screen-sub">사용한 기저귀 종류를 선택해 주세요.</div>
-    <div class="option-grid single">
-      <div class="option-card" onclick="selectDiaperCat(this,'팬티형기저귀')">
-        <div class="card-name">팬티형 기저귀</div>
+  <div id="main-stats-area" style="display: none; flex-direction: column; flex: 1; padding: 24px 20px 100px; overflow-y: auto;">
+    <div class="screen-title">사용 통계 조회</div>
+    <div class="screen-sub">지정된 날짜 범위 내의 사용량을 실시간으로 집계합니다.</div>
+    
+    <div class="stats-filter-card">
+      <div class="stats-date-row">
+        <input type="date" id="statsStartDate">
+        <span style="color:var(--text2); font-weight:bold;">~</span>
+        <input type="date" id="statsEndDate">
       </div>
-      <div class="option-card" onclick="selectDiaperCat(this,'겉기저귀')">
-        <div class="card-name">겉 기저귀</div>
-      </div>
-      <div class="option-card" onclick="selectDiaperCat(this,'속기저귀')">
-        <div class="card-name">속 기저귀</div>
-      </div>
-      <div class="option-card" onclick="selectDiaperCat(this,'위생깔개매트')">
-        <div class="card-name">위생 깔개 매트</div>
-      </div>
+      <button class="btn-stats-search" onclick="loadStatistics()">조회하기</button>
     </div>
+
+    <div id="stats-result-container" style="display:none;">
+      <div class="stats-section-title">병동별 사용 통계</div>
+      <div class="stats-data-list" id="stats-dept-list"></div>
+
+      <div class="stats-section-title">환자별 사용 통계</div>
+      <div class="stats-data-list" id="stats-patient-list"></div>
+
+      <div class="stats-section-title">기저귀 종류별 통계</div>
+      <div class="stats-data-list" id="stats-type-list"></div>
+    </div>
+    
+    <div id="stats-loading-msg" class="stats-empty-msg" style="display:none; font-weight: 600; color: var(--primary);">구글 스프레드시트 데이터 불러오는 중...</div>
+    <div id="stats-initial-msg" class="stats-empty-msg">날짜를 설정하고 조회하기 버튼을 눌러주세요.</div>
   </div>
 
-  <div class="screen" id="screen3">
-    <div class="screen-title">기저귀 종류</div>
-    <div class="screen-sub">세부 종류를 선택해 주세요.</div>
-    <div class="option-grid single" id="diaperTypeGrid"></div>
-  </div>
-
-  <div class="screen" id="screen4">
-    <div class="screen-title">사용 갯수</div>
-    <div class="screen-sub">사용한 수량을 입력해 주세요.</div>
-    <div class="qty-wrap">
-      <button class="qty-btn" onclick="changeQty(-1)">-</button>
-      <input type="number" class="qty-display" id="qtyDisplay" value="1" min="1">
-      <button class="qty-btn" onclick="changeQty(1)">+</button>
+  <div id="main-record-area" style="display: flex; flex-direction: column; flex: 1;">
+    <div class="step-progress" id="stepProgress">
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:14%"></div>
+      </div>
+      <div class="step-label" id="stepLabel">1단계 / 7단계</div>
     </div>
-    <div class="info-card" style="margin-top:24px;">
-      <div class="info-row"><span class="info-key">환자 이름</span><span class="info-val" id="rev-patient">-</span></div>
-      <div class="info-row"><span class="info-key">기저귀 종류</span><span class="info-val" id="rev-diaper">-</span></div>
-    </div>
-  </div>
 
-  <div class="screen" id="screen5">
-    <div class="screen-title">날짜 및 시간</div>
-    <div class="datetime-card">
-      <div class="dt-date" id="dtDateDisp"></div>
-      <div class="dt-time" id="dtTimeDisp"></div>
-      <div class="dt-edit">
-        <input type="date" id="dtDate">
-        <input type="time" id="dtTime">
+    <div class="screen active" id="screen1">
+      <div class="screen-title">사용 환자</div>
+      <div class="screen-sub">환자의 정보를 모두 입력해 주세요.</div>
+      <div class="input-wrap">
+        <span class="input-label">환자 이름</span>
+        <input type="text" class="text-input" id="patientName" placeholder="홍길동" oninput="filterKorean(this); validateScreen1();" style="font-size:20px;font-weight:700;">
+      </div>
+      <div class="input-wrap">
+        <span class="input-label">환자 번호</span>
+        <input type="text" class="text-input" id="patientId" placeholder="예: 12345" oninput="filterNumber(this); validateScreen1();">
+      </div>
+      <div class="input-wrap">
+        <span class="input-label">병실</span>
+        <input type="text" class="text-input" id="roomNo" placeholder="예: 301" oninput="filterNumber(this); validateScreen1();">
       </div>
     </div>
-  </div>
 
-  <div class="screen" id="screen6">
-    <div class="screen-title">사용 부서 선택</div>
-    <div class="option-grid">
-      <div class="option-card" onclick="selectOption('dept','2A병동', this)">2A병동</div>
-      <div class="option-card" onclick="selectOption('dept','2B병동', this)">2B병동</div>
-      <div class="option-card" onclick="selectOption('dept','3A병동', this)">3A병동</div>
-      <div class="option-card" onclick="selectOption('dept','3B병동', this)">3B병동</div>
-      <div class="option-card" onclick="selectOption('dept','5병동', this)">5병동</div>
-    </div>
-  </div>
-
-  <div class="screen" id="screen7">
-    <div class="screen-title">입력 직원 정보</div>
-    <div class="option-grid single" style="margin-bottom: 15px;">
-      <div class="option-card" onclick="selectOption('staffType','간호사', this)">간호사/직원</div>
-      <div class="option-card" onclick="selectOption('staffType','간병사', this)">간병사</div>
-    </div>
-    <div class="input-wrap">
-      <span class="input-label">직원 이름</span>
-      <input type="text" class="text-input" id="staffName" placeholder="이름을 입력하세요" oninput="filterKorean(this); validateScreen7();">
-    </div>
-  </div>
-
-  <div class="screen" id="screen8">
-    <div class="success-wrap">
-      <div class="success-icon">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-          <polyline points="8,20 16,28 32,12" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div class="success-title" id="saveStatusTitle">엑셀 저장 중...</div>
-      <div class="success-sub" id="saveStatusSub">잠시만 기다려주세요.</div>
-      <div class="success-actions" id="successActions" style="display:none;">
-        <button class="btn-primary-solid" onclick="resetForm()">새로 입력하기</button>
+    <div class="screen" id="screen2">
+      <div class="screen-title">기저귀 구분</div>
+      <div class="screen-sub">사용한 기저귀 종류를 선택해 주세요.</div>
+      <div class="option-grid single">
+        <div class="option-card" onclick="selectDiaperCat(this,'팬티형기저귀')">
+          <div class="card-name">팬티형 기저귀</div>
+        </div>
+        <div class="option-card" onclick="selectDiaperCat(this,'겉기저귀')">
+          <div class="card-name">겉 기저귀</div>
+        </div>
+        <div class="option-card" onclick="selectDiaperCat(this,'속기저귀')">
+          <div class="card-name">속 기저귀</div>
+        </div>
+        <div class="option-card" onclick="selectDiaperCat(this,'위생깔개매트')">
+          <div class="card-name">위생 깔개 매트</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="bottom-bar" id="bottomBar">
-    <button class="btn-back" id="btnBack" onclick="goBack()">이전</button>
-    <button class="btn-next" id="btnNext" onclick="goNext()">다음</button>
+    <div class="screen" id="screen3">
+      <div class="screen-title">기저귀 종류</div>
+      <div class="screen-sub">세부 종류를 선택해 주세요.</div>
+      <div class="option-grid single" id="diaperTypeGrid"></div>
+    </div>
+
+    <div class="screen" id="screen4">
+      <div class="screen-title">사용 갯수</div>
+      <div class="screen-sub">사용한 수량을 입력해 주세요.</div>
+      <div class="qty-wrap">
+        <button class="qty-btn" onclick="changeQty(-1)">-</button>
+        <input type="number" class="qty-display" id="qtyDisplay" value="1" min="1" oninput="validateCurrentScreen()">
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+      
+      <div class="qty-presets-grid">
+        <button class="qty-preset-btn selected" onclick="setPresetQty(1, this)">1개</button>
+        <button class="qty-preset-btn" onclick="setPresetQty(2, this)">2개</button>
+        <button class="qty-preset-btn" onclick="setPresetQty(3, this)">3개</button>
+        <button class="qty-preset-btn" onclick="setPresetQty(4, this)">4개</button>
+        <button class="qty-preset-btn" onclick="setPresetQty(5, this)">5개</button>
+        <button class="qty-preset-btn" onclick="setPresetQty(6, this)">6개</button>
+        <button class="qty-preset-btn" onclick="setPresetQty(7, this)">7개</button>
+        <button class="qty-preset-btn" onclick="setPresetQty(8, this)">8개</button>
+        <button class="qty-preset-btn" onclick="setPresetQty(9, this)">9개</button>
+        <button class="qty-preset-btn" onclick="setPresetQty(10, this)">10개</button>
+      </div>
+
+      <div class="info-card" style="margin-top:16px;">
+        <div class="info-row"><span class="info-key">환자 이름</span><span class="info-val" id="rev-patient">-</span></div>
+        <div class="info-row"><span class="info-key">기저귀 종류</span><span class="info-val" id="rev-diaper">-</span></div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen5">
+      <div class="screen-title">날짜 및 시간</div>
+      <div class="datetime-card">
+        <div class="dt-date" id="dtDateDisp"></div>
+        <div class="dt-time" id="dtTimeDisp"></div>
+        <div class="dt-edit">
+          <input type="date" id="dtDate">
+          <input type="time" id="dtTime">
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen6">
+      <div class="screen-title">사용 부서 선택</div>
+      <div class="option-grid">
+        <div class="option-card" onclick="selectOption('dept','2A병동', this)">2A병동</div>
+        <div class="option-card" onclick="selectOption('dept','2B병동', this)">2B병동</div>
+        <div class="option-card" onclick="selectOption('dept','3A병동', this)">3A병동</div>
+        <div class="option-card" onclick="selectOption('dept','3B병동', this)">3B병동</div>
+        <div class="option-card" onclick="selectOption('dept','5병동', this)">5병동</div>
+      </div>
+    </div>
+
+    <div class="screen" id="screen7">
+      <div class="screen-title">입력 직원 정보</div>
+      <div class="option-grid single" style="margin-bottom: 15px;">
+        <div class="option-card" onclick="selectOption('staffType','간호사', this)">간호사/직원</div>
+        <div class="option-card" onclick="selectOption('staffType','간병사', this)">간병사</div>
+      </div>
+      <div class="input-wrap">
+        <span class="input-label">직원 이름</span>
+        <input type="text" class="text-input" id="staffName" placeholder="이름을 입력하세요" oninput="filterKorean(this); validateScreen7();">
+      </div>
+    </div>
+
+    <div class="screen" id="screen8">
+      <div class="success-wrap">
+        <div class="success-icon">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <polyline points="8,20 16,28 32,12" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="success-title" id="saveStatusTitle">엑셀 저장 중...</div>
+        <div class="success-sub" id="saveStatusSub">잠시만 기다려주세요.</div>
+        <div class="success-actions" id="successActions" style="display:none;">
+          <button class="btn-primary-solid" onclick="resetForm()">새로 입력하기</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-bar" id="bottomBar">
+      <button class="btn-back" id="btnBack" onclick="goBack()">이전</button>
+      <button class="btn-next" id="btnNext" onclick="goNext()">다음</button>
+    </div>
   </div>
 
 </div>
 
 <script>
-// ⭐ [가장 중요]여기에 1단계에서 딴 구글 주소를 꼭 붙여넣으세요!
+// ⭐ [가장 중요] 여기에 깃허브 업로드 전 1단계에서 딴 구글 웹 앱 주소를 꼭 채워 넣어주세요!
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwNjY1dGgkZfIYs90SrejzIhyGRKp_p0E6UUch9_kri0WIl_8UtNW1NwrLNAnrXkbN/exec";
 
 const state = {
@@ -399,6 +476,11 @@ function init() {
   state.data.time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
   document.getElementById('dtDate').value = state.data.date;
   document.getElementById('dtTime').value = state.data.time;
+  
+  // 통계 날짜 기본값 당일 설정
+  document.getElementById('statsStartDate').value = state.data.date;
+  document.getElementById('statsEndDate').value = state.data.date;
+  
   updateDateDisplay();
   validateCurrentScreen();
 }
@@ -411,6 +493,26 @@ function updateDateDisplay() {
 document.getElementById('dtDate').addEventListener('input', function() { state.data.date = this.value; updateDateDisplay(); });
 document.getElementById('dtTime').addEventListener('input', function() { state.data.time = this.value; updateDateDisplay(); });
 
+/* 대시보드 메인 메뉴 탭 전환 매커니즘 보존 및 구현 */
+function switchMainTab(tab) {
+  const btnRecord = document.getElementById('tab-record');
+  const btnStats = document.getElementById('tab-stats');
+  const areaRecord = document.getElementById('main-record-area');
+  const areaStats = document.getElementById('main-stats-area');
+
+  if (tab === 'record') {
+    btnRecord.classList.add('active');
+    btnStats.classList.remove('active');
+    areaRecord.style.display = 'flex';
+    areaStats.style.display = 'none';
+  } else {
+    btnRecord.classList.remove('active');
+    btnStats.classList.add('active');
+    areaRecord.style.display = 'none';
+    areaStats.style.display = 'flex';
+  }
+}
+
 function goTo(screenNum) {
   for (let i = 1; i <= 8; i++) document.getElementById('screen' + i).classList.remove('active');
   document.getElementById('screen' + screenNum).classList.add('active');
@@ -422,7 +524,7 @@ function goTo(screenNum) {
   if (screenNum === 8) {
     sp.style.display = 'none';
     bb.style.display = 'none';
-    saveDataToGoogle(); // 8단계 도달 시 구글 엑셀로 전송 시작
+    saveDataToGoogle();
   } else {
     sp.style.display = '';
     bb.style.display = '';
@@ -444,10 +546,10 @@ function validateCurrentScreen() {
   } else if (state.currentScreen === 3) {
     isValid = state.data.diaperType;
   } else if (state.currentScreen === 4) {
-    state.data.qty = document.getElementById('qtyDisplay').value;
+    state.data.qty = parseInt(document.getElementById('qtyDisplay').value) || 1;
     document.getElementById('rev-patient').textContent = document.getElementById('patientName').value;
     document.getElementById('rev-diaper').textContent = state.data.diaperType;
-    isValid = true;
+    isValid = state.data.qty > 0;
   } else if (state.currentScreen === 5 || state.currentScreen === 6) {
     isValid = true;
   } else if (state.currentScreen === 7) {
@@ -492,15 +594,31 @@ function selectOption(field, val, el) {
   validateCurrentScreen();
 }
 
+/* 갯수 조정용 피커 핵심 메커니즘 복원 */
 function changeQty(n) {
   const disp = document.getElementById('qtyDisplay');
-  let val = parseInt(disp.value) + n;
+  let val = (parseInt(disp.value) || 1) + n;
   if(val < 1) val = 1;
   disp.value = val;
+  
+  // 프리셋 탭 활성화 유무 연동 처리
+  const presetBtns = document.querySelectorAll('.qty-preset-btn');
+  presetBtns.forEach(btn => btn.classList.remove('selected'));
+  if (val <= 10) {
+    presetBtns[val - 1].classList.add('selected');
+  }
   validateCurrentScreen();
 }
 
-// 🚀 구글 엑셀 파일로 실시간 데이터를 전송하는 무선 통신 함수
+/* 1개~10개 프리셋 탭 누르기 액션 매커니즘 복원 */
+function setPresetQty(num, btnElement) {
+  document.getElementById('qtyDisplay').value = num;
+  const presetBtns = document.querySelectorAll('.qty-preset-btn');
+  presetBtns.forEach(btn => btn.classList.remove('selected'));
+  btnElement.classList.add('selected');
+  validateCurrentScreen();
+}
+
 function saveDataToGoogle() {
   state.data.patientName = document.getElementById('patientName').value;
   state.data.patientId = document.getElementById('patientId').value;
@@ -508,7 +626,7 @@ function saveDataToGoogle() {
 
   fetch(GOOGLE_SCRIPT_URL, {
     method: "POST",
-    mode: "no-cors", // 보안 정책 우회 설정
+    mode: "no-cors",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(state.data)
   })
@@ -524,6 +642,78 @@ function saveDataToGoogle() {
   });
 }
 
+/* 실시간 구글 스프레드시트 연동용 통계 집계 엔진 복원 */
+function loadStatistics() {
+  const start = document.getElementById('statsStartDate').value;
+  const end = document.getElementById('statsEndDate').value;
+  
+  if(!start || !end) {
+    alert("시작 날짜와 종료 날짜를 지정해 주세요.");
+    return;
+  }
+
+  document.getElementById('stats-initial-msg').style.display = 'none';
+  document.getElementById('stats-loading-msg').style.display = 'block';
+  document.getElementById('stats-result-container').style.display = 'none';
+
+  // Apps Script의 doGet 통신 연동 주소 구성 생성
+  const fetchUrl = `${GOOGLE_SCRIPT_URL}?start=${start}&end=${end}`;
+
+  fetch(fetchUrl)
+    .then(res => res.json())
+    .then(rows => {
+      document.getElementById('stats-loading-msg').style.display = 'none';
+      document.getElementById('stats-result-container').style.display = 'block';
+
+      // 집계용 저장소 오브젝트 생성
+      const sumDept = {};
+      const sumPatient = {};
+      const sumType = {};
+
+      // 구글 시트에서 날짜 필터링 및 데이터 파싱 연산 실행
+      rows.forEach(item => {
+        const itemDate = item.date; // 형태: YYYY-MM-DD
+        if (itemDate >= start && itemDate <= end) {
+          const qty = parseInt(item.qty) || 0;
+
+          if(item.dept) sumDept[item.dept] = (sumDept[item.dept] || 0) + qty;
+          if(item.patientName) {
+            const pKey = `${item.patientName}(${item.patientId || '무명'})`;
+            sumPatient[pKey] = (sumPatient[pKey] || 0) + qty;
+          }
+          if(item.diaperType) sumType[item.diaperType] = (sumType[item.diaperType] || 0) + qty;
+        }
+      });
+
+      // UI 그리기 유틸리티 함수
+      const renderStatsList = (targetId, dataObj) => {
+        const wrapper = document.getElementById(targetId);
+        wrapper.innerHTML = '';
+        const keys = Object.keys(dataObj);
+        if(keys.length === 0) {
+          wrapper.innerHTML = '<div class="stats-empty-msg">해당 기간 내 데이터가 없습니다.</div>';
+          return;
+        }
+        keys.forEach(k => {
+          const row = document.createElement('div');
+          row.className = 'stats-data-row';
+          row.innerHTML = `<span class="stats-data-name">${k}</span><span class="stats-data-count">${dataObj[k]}개</span>`;
+          wrapper.appendChild(row);
+        });
+      };
+
+      renderStatsList('stats-dept-list', sumDept);
+      renderStatsList('stats-patient-list', sumPatient);
+      renderStatsList('stats-type-list', sumType);
+    })
+    .catch(err => {
+      document.getElementById('stats-loading-msg').style.display = 'none';
+      document.getElementById('stats-initial-msg').style.display = 'block';
+      document.getElementById('stats-initial-msg').textContent = "데이터 읽기 오류가 발생했습니다. 구글 웹 앱 URL 주소 설정을 확인해 보세요.";
+      console.error(err);
+    });
+}
+
 function resetForm() {
   document.getElementById('patientName').value = '';
   document.getElementById('patientId').value = '';
@@ -533,6 +723,11 @@ function resetForm() {
   state.data = { date: '', time: '', dept: '', staffType: '', staffName: '', patientName: '', patientId: '', roomNo: '', diaperCat: '', diaperType: '', qty: 1 };
   
   document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+  
+  const presetBtns = document.querySelectorAll('.qty-preset-btn');
+  presetBtns.forEach(btn => btn.classList.remove('selected'));
+  presetBtns[0].classList.add('selected');
+
   init();
   goTo(1);
 }
