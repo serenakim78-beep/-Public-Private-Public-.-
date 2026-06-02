@@ -392,7 +392,6 @@ function saveDataToGoogle() {
   state.data.patientId = document.getElementById('patientId').value.trim();
   state.data.roomNo = document.getElementById('roomNo').value.trim();
   
-  // 💡 수정: application/x-www-form-urlencoded 구조에 맞게 URLSearchParams 객체 빌드
   const searchParams = new URLSearchParams();
   for (const key in state.data) {
     searchParams.append(key, state.data[key]);
@@ -400,12 +399,11 @@ function saveDataToGoogle() {
 
   fetch(GOOGLE_SCRIPT_URL, {
     method: "POST",
-    mode: "no-cors", // 모바일 환경 및 CORS 리다이렉션 무시용 필수 설정
+    mode: "no-cors",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: searchParams.toString()
   })
   .then(() => {
-    // no-cors 모드는 항상 불투명(opaque) 응답을 반환하므로 catch로 가지 않고 정상 완료 처리됩니다.
     document.getElementById('saveStatusTitle').textContent = "저장 완료!";
     document.getElementById('saveStatusSub').textContent = "스프레드시트에 실시간 기록되었습니다.";
     document.getElementById('successActions').style.display = 'flex';
@@ -419,12 +417,10 @@ function saveDataToGoogle() {
 
 function parseToDateString(dStr) {
   if (!dStr) return '';
-  // 만약 숫자만 포함된 8자리 문자열(YYYYMMDD)인 경우 변환
   let clean = String(dStr).replace(/[^0-9]/g, '');
   if (clean.length === 8) {
     return `${clean.substring(0,4)}-${clean.substring(4,6)}-${clean.substring(6,8)}`;
   }
-  // 구글 시트 등에서 넘어온 타임스탬프 규격 가공
   try {
     const d = new Date(dStr);
     if(!isNaN(d.getTime())) {
@@ -436,8 +432,8 @@ function parseToDateString(dStr) {
 }
 
 function loadStatistics() {
-  const startInput = document.getElementById('statsStartDate').value; // YYYY-MM-DD
-  const endInput = document.getElementById('statsEndDate').value;     // YYYY-MM-DD
+  const startInput = document.getElementById('statsStartDate').value;
+  const endInput = document.getElementById('statsEndDate').value;
   if(!startInput || !endInput) { alert("날짜를 지정해 주세요."); return; }
   
   const startDate = new Date(startInput + 'T00:00:00');
@@ -459,9 +455,8 @@ function loadStatistics() {
         let normalizedDateStr = parseToDateString(item.date);
         if (!normalizedDateStr) return;
         
-        let itemDate = new Date(normalizedDateStr + 'T12:00:00'); // 시간대 오차 방지
+        let itemDate = new Date(normalizedDateStr + 'T12:00:00');
         
-        // 날짜 필터링 범위 체크
         if (itemDate >= startDate && itemDate <= endDate) {
           const qty = parseInt(item.qty) || 0;
           if(item.dept) sumDept[item.dept] = (sumDept[item.dept] || 0) + qty;
@@ -469,7 +464,12 @@ function loadStatistics() {
             const pKey = `${item.patientName}(${item.roomNo ? item.roomNo + '호' : '미지정'})`;
             sumPatient[pKey] = (sumPatient[pKey] || 0) + qty;
           }
-          if(item.diaperType) sumType[item.diaperType] = (sumType[item.diaperType] || 0) + qty;
+          
+          // 💡 수정 항목: 기저귀 구분값(item.diaperCat)이 있다면 함께 묶어서 '구분 - 종류'로 노출 (예: 팬티형기저귀 - 자가)
+          if(item.diaperType) {
+            const typeKey = item.diaperCat ? `${item.diaperCat} - ${item.diaperType}` : item.diaperType;
+            sumType[typeKey] = (sumType[typeKey] || 0) + qty;
+          }
         }
       });
 
@@ -478,7 +478,6 @@ function loadStatistics() {
         const keys = Object.keys(dataObj);
         if(keys.length === 0) { wrapper.innerHTML = '<div class="stats-empty-msg">해당 기간 내 데이터가 없습니다.</div>'; return; }
         
-        // 정렬: 많이 쓴 부서/환자/종류가 위로 오게 배치
         keys.sort((a,b) => dataObj[b] - dataObj[a]);
         
         keys.forEach(k => {
