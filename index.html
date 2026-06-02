@@ -445,12 +445,38 @@ function loadStatistics() {
 
   fetch(GOOGLE_SCRIPT_URL)
     .then(res => res.json())
-    .then(rows => {
+    .then(data => {
       document.getElementById('stats-loading-msg').style.display = 'none';
       document.getElementById('stats-result-container').style.display = 'block';
       
       const deptGroups = {};
+      let rows = [];
 
+      // [안정화 가드] 구글 서버에서 데이터가 이미 통계 형태로 오는지, 통 데이터로 오는지 둘 다 호환되도록 처리
+      if (Array.isArray(data)) {
+        if (data.length > 0 && (data[0].totalQty !== undefined || data[0].patients !== undefined)) {
+          // 1. 이미 구글 서버에서 통계 가공이 끝나서 내려온 경우
+          data.forEach(group => {
+            const dept = group.dept || "미지정 부서";
+            if (!deptGroups[dept]) {
+              deptGroups[dept] = { total: group.totalQty || 0, patients: {}, diapers: {} };
+            }
+            if (Array.isArray(group.patients)) {
+              group.patients.forEach(p => { deptGroups[dept].patients[p.name] = (deptGroups[dept].patients[p.name] || 0) + p.qty; });
+            }
+            if (Array.isArray(group.diapers)) {
+              group.diapers.forEach(d => { deptGroups[dept].diapers[d.type] = (deptGroups[dept].diapers[d.type] || 0) + d.qty; });
+            }
+          });
+          buildStatsUI(deptGroups);
+          return;
+        } else {
+          // 2. 가공되지 않은 통 데이터 행들이 내려온 경우
+          rows = data;
+        }
+      }
+
+      // 통 데이터(Raw 데이터)일 때 처리하는 로직
       rows.forEach(item => {
         let rawDate = item.date ? String(item.date).split('T')[0].trim() : '';
         let normalizedDateStr = parseToDateString(rawDate) || rawDate;
@@ -485,68 +511,72 @@ function loadStatistics() {
         }
       });
 
-      const container = document.getElementById('stats-dept-group-container');
-      container.innerHTML = '';
-
-      const depts = Object.keys(deptGroups);
-      if(depts.length === 0) {
-        container.innerHTML = '<div class="stats-empty-msg">해당 기간 내 데이터가 없습니다.</div>';
-        return;
-      }
-
-      depts.sort().forEach(deptName => {
-        const group = deptGroups[deptName];
-
-        const groupCard = document.createElement('div');
-        groupCard.className = 'dept-group-card';
-
-        const groupTitle = document.createElement('div');
-        groupTitle.className = 'dept-group-title';
-        groupTitle.innerHTML = `<span>📍 ${deptName}</span><span>총 ${group.total}개</span>`;
-        groupCard.appendChild(groupTitle);
-
-        const pSectionTitle = document.createElement('div');
-        pSectionTitle.className = 'sub-section-title';
-        pSectionTitle.textContent = '👥 환자별 사용 통계';
-        groupCard.appendChild(pSectionTitle);
-
-        const pListWrapper = document.createElement('div');
-        pListWrapper.className = 'stats-data-list';
-        
-        const pKeys = Object.keys(group.patients).sort((a,b) => group.patients[b] - group.patients[a]);
-        pKeys.forEach(pk => {
-          const row = document.createElement('div');
-          row.className = 'stats-data-row';
-          row.innerHTML = `<span class="stats-data-name">${pk}</span><span class="stats-data-count">${group.patients[pk]}개</span>`;
-          pListWrapper.appendChild(row);
-        });
-        groupCard.appendChild(pListWrapper);
-
-        const dSectionTitle = document.createElement('div');
-        dSectionTitle.className = 'sub-section-title';
-        dSectionTitle.textContent = '✨ 기저귀 종류별 통계';
-        groupCard.appendChild(dSectionTitle);
-
-        const dListWrapper = document.createElement('div');
-        dListWrapper.className = 'stats-data-list';
-
-        const dKeys = Object.keys(group.diapers).sort((a,b) => group.diapers[b] - group.diapers[a]);
-        dKeys.forEach(dk => {
-          const row = document.createElement('div');
-          row.className = 'stats-data-row';
-          row.innerHTML = `<span class="stats-data-name">${dk}</span><span class="stats-data-count" style="color:var(--warning);">${group.diapers[dk]}개</span>`;
-          dListWrapper.appendChild(row);
-        });
-        groupCard.appendChild(dListWrapper);
-
-        container.appendChild(groupCard);
-      });
+      buildStatsUI(deptGroups);
     })
     .catch(err => {
       document.getElementById('stats-loading-msg').style.display = 'none';
       document.getElementById('stats-initial-msg').style.display = 'block';
       document.getElementById('stats-initial-msg').textContent = "연동 주소 설정 오류 또는 서버가 응답하지 않습니다.";
     });
+}
+
+function buildStatsUI(deptGroups) {
+  const container = document.getElementById('stats-dept-group-container');
+  container.innerHTML = '';
+
+  const depts = Object.keys(deptGroups);
+  if(depts.length === 0) {
+    container.innerHTML = '<div class="stats-empty-msg">해당 기간 내 데이터가 없습니다.</div>';
+    return;
+  }
+
+  depts.sort().forEach(deptName => {
+    const group = deptGroups[deptName];
+
+    const groupCard = document.createElement('div');
+    groupCard.className = 'dept-group-card';
+
+    const groupTitle = document.createElement('div');
+    groupTitle.className = 'dept-group-title';
+    groupTitle.innerHTML = `<span>📍 ${deptName}</span><span>총 ${group.total}개</span>`;
+    groupCard.appendChild(groupTitle);
+
+    const pSectionTitle = document.createElement('div');
+    pSectionTitle.className = 'sub-section-title';
+    pSectionTitle.textContent = '👥 환자별 사용 통계';
+    groupCard.appendChild(pSectionTitle);
+
+    const pListWrapper = document.createElement('div');
+    pListWrapper.className = 'stats-data-list';
+    
+    const pKeys = Object.keys(group.patients).sort((a,b) => group.patients[b] - group.patients[a]);
+    pKeys.forEach(pk => {
+      const row = document.createElement('div');
+      row.className = 'stats-data-row';
+      row.innerHTML = `<span class="stats-data-name">${pk}</span><span class="stats-data-count">${group.patients[pk]}개</span>`;
+      pListWrapper.appendChild(row);
+    });
+    groupCard.appendChild(pListWrapper);
+
+    const dSectionTitle = document.createElement('div');
+    dSectionTitle.className = 'sub-section-title';
+    dSectionTitle.textContent = '✨ 기저귀 종류별 통계';
+    groupCard.appendChild(dSectionTitle);
+
+    const dListWrapper = document.createElement('div');
+    dListWrapper.className = 'stats-data-list';
+
+    const dKeys = Object.keys(group.diapers).sort((a,b) => group.diapers[b] - group.diapers[a]);
+    dKeys.forEach(dk => {
+      const row = document.createElement('div');
+      row.className = 'stats-data-row';
+      row.innerHTML = `<span class="stats-data-name">${dk}</span><span class="stats-data-count" style="color:var(--warning);">${group.diapers[dk]}개</span>`;
+      dListWrapper.appendChild(row);
+    });
+    groupCard.appendChild(dListWrapper);
+
+    container.appendChild(groupCard);
+  });
 }
 
 function resetForm() {
