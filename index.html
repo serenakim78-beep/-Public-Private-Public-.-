@@ -245,7 +245,6 @@
 </div>
 
 <script>
-// ⚠️ 주의: 아래 큰따옴표 안에 새로 배포한 구글 웹 앱 URL 주소를 정확하게 넣어주세요!
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuo-UYQr3NmHJuGY2v-w4KcOObRfv2YX9Xs6CY9CQDxqhB2cOW_MxtuFToY8fu_CEN/exec";
 
 const state = {
@@ -260,7 +259,6 @@ const diaperTypes = {
   '위생깔개매트': [{name:'포인트 깔개매트'}, {name:'자가'}]
 };
 
-// 💡 [전역 변수 추가] 환자별 기저귀 세부 통계를 저장해둘 객체를 하나 선언합니다. (기존 로직엔 영향 없음)
 let globalPatientDetails = {};
 
 function init() {
@@ -434,7 +432,6 @@ function parseToDateString(dStr) {
   return '';
 }
 
-// 💡 [클릭 핸들러 함수 추가] 환자 행을 클릭했을 때 작동하는 알림 메시지 로직입니다. (디자인 변경 없이 순수 기능만 추가)
 function showPatientDiaperDetails(patientKey) {
   const details = globalPatientDetails[patientKey];
   if (!details) {
@@ -471,8 +468,6 @@ function loadStatistics() {
       document.getElementById('stats-result-container').style.display = 'block';
       
       const sumDept = {}, sumPatient = {}, sumType = {};
-      
-      // 💡 [초기화] 매 조회 시 환자별 세부 기저귀 카운트를 담을 바구니를 깨끗이 비워줍니다.
       globalPatientDetails = {};
 
       rows.forEach(item => {
@@ -497,10 +492,13 @@ function loadStatistics() {
           const formattedType = item.diaperType ? `${catName} - ${item.diaperType.trim()}` : "";
 
           if(item.patientName) {
-            const pKey = `${item.patientName}(${item.roomNo ? item.roomNo + '호' : '미지정'})`;
+            // 💡 [출력 형식 수정] 요구사항대로 환자 이름(환자 번호 / 병실) 형태로 고유 키(텍스트명)를 빌드합니다.
+            const pId = item.patientId ? item.patientId.trim() : '미지정';
+            const rNo = item.roomNo ? item.roomNo + '호' : '미지정';
+            const pKey = `${item.patientName}(${pId} / ${rNo})`;
+            
             sumPatient[pKey] = (sumPatient[pKey] || 0) + qty;
             
-            // 💡 [핵심 데이터 수집 로직 추가] 환자별로 어떤 기저귀를 몇 개 썼는지 "구분 - 종류" 텍스트 형태로 다중 누적 집계합니다.
             if(formattedType) {
               if (!globalPatientDetails[pKey]) {
                 globalPatientDetails[pKey] = {};
@@ -515,7 +513,6 @@ function loadStatistics() {
         }
       });
 
-      // 💡 [환자별 리스트 렌더링 분리] 클릭 이벤트를 심기 위해 renderStatsList 함수 내부를 인지하여 분기 구현했습니다.
       const renderStatsList = (targetId, dataObj, isPatientList = false) => {
         const wrapper = document.getElementById(targetId); wrapper.innerHTML = '';
         const keys = Object.keys(dataObj);
@@ -526,7 +523,6 @@ function loadStatistics() {
         keys.forEach(k => {
           const row = document.createElement('div'); row.className = 'stats-data-row';
           
-          // 💡 [클릭 이벤트 바인딩] 환자 통계 리스트일 때만 클릭 효과(cursor:pointer)와 클릭 시 세부 팝업창 함수를 호출하게 링크합니다.
           if (isPatientList) {
             row.style.cursor = 'pointer';
             row.onclick = function() { showPatientDiaperDetails(k); };
@@ -538,7 +534,7 @@ function loadStatistics() {
       };
 
       renderStatsList('stats-dept-list', sumDept);
-      renderStatsList('stats-patient-list', sumPatient, true); // 💡 환자 리스트에는 세부 확인용 플래그 true 전달
+      renderStatsList('stats-patient-list', sumPatient, true);
       renderStatsList('stats-type-list', sumType);
     })
     .catch(err => {
