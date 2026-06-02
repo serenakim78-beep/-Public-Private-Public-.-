@@ -292,7 +292,6 @@ function switchMainTab(tab) {
   } else {
     btnRecord.classList.remove('active'); btnStats.classList.add('active');
     areaRecord.style.display = 'none'; areaStats.style.display = 'flex';
-    // 통계 탭으로 올 때 자동으로 한 번 로드 시도
     loadStatistics();
   }
 }
@@ -393,41 +392,56 @@ function saveDataToGoogle() {
   state.data.patientId = document.getElementById('patientId').value.trim();
   state.data.roomNo = document.getElementById('roomNo').value.trim();
   
-  // POST 요청을 명확하게 처리합니다.
+  // 💡 수정: application/x-www-form-urlencoded 구조에 맞게 URLSearchParams 객체 빌드
+  const searchParams = new URLSearchParams();
+  for (const key in state.data) {
+    searchParams.append(key, state.data[key]);
+  }
+
   fetch(GOOGLE_SCRIPT_URL, {
     method: "POST",
+    mode: "no-cors", // 모바일 환경 및 CORS 리다이렉션 무시용 필수 설정
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: JSON.stringify(state.data)
+    body: searchParams.toString()
   })
   .then(() => {
+    // no-cors 모드는 항상 불투명(opaque) 응답을 반환하므로 catch로 가지 않고 정상 완료 처리됩니다.
     document.getElementById('saveStatusTitle').textContent = "저장 완료!";
     document.getElementById('saveStatusSub').textContent = "스프레드시트에 실시간 기록되었습니다.";
     document.getElementById('successActions').style.display = 'flex';
   })
   .catch(err => {
-    // 폰 환경에서 CORS 에러 우회를 위한 처리
-    document.getElementById('saveStatusTitle').textContent = "저장 완료";
-    document.getElementById('saveStatusSub').textContent = "데이터 전송이 완료되었습니다.";
+    document.getElementById('saveStatusTitle').textContent = "확인 필요";
+    document.getElementById('saveStatusSub').textContent = "전송 과정에 문제가 발생했습니다. 네트워크를 확인해 주세요.";
     document.getElementById('successActions').style.display = 'flex';
   });
 }
 
-function formatCompareDate(dStr) {
+function parseToDateString(dStr) {
   if (!dStr) return '';
-  let clean = String(dStr).replace(/[^0-9]/g, ''); // 숫자만 남기기
-  if (clean.length >= 8) {
-    return clean.substring(0, 8); // YYYYMMDD
+  // 만약 숫자만 포함된 8자리 문자열(YYYYMMDD)인 경우 변환
+  let clean = String(dStr).replace(/[^0-9]/g, '');
+  if (clean.length === 8) {
+    return `${clean.substring(0,4)}-${clean.substring(4,6)}-${clean.substring(6,8)}`;
   }
-  return clean;
+  // 구글 시트 등에서 넘어온 타임스탬프 규격 가공
+  try {
+    const d = new Date(dStr);
+    if(!isNaN(d.getTime())) {
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    }
+  } catch(e){}
+  return '';
 }
 
 function loadStatistics() {
-  const startInput = document.getElementById('statsStartDate').value;
-  const endInput = document.getElementById('statsEndDate').value;
+  const startInput = document.getElementById('statsStartDate').value; // YYYY-MM-DD
+  const endInput = document.getElementById('statsEndDate').value;     // YYYY-MM-DD
   if(!startInput || !endInput) { alert("날짜를 지정해 주세요."); return; }
   
-  const startTarget = startInput.replace(/[^0-9]/g, '');
-  const endTarget = endInput.replace(/[^0-9]/g, '');
+  const startDate = new Date(startInput + 'T00:00:00');
+  const endDate = new Date(endInput + 'T23:59:59');
 
   document.getElementById('stats-initial-msg').style.display = 'none';
   document.getElementById('stats-loading-msg').style.display = 'block';
@@ -440,15 +454,15 @@ function loadStatistics() {
       document.getElementById('stats-result-container').style.display = 'block';
       
       const sumDept = {}, sumPatient = {}, sumType = {};
-      let hasData = false;
 
       rows.forEach(item => {
-        let cmpDate = formatCompareDate(item.date);
-        if (!cmpDate) return;
+        let normalizedDateStr = parseToDateString(item.date);
+        if (!normalizedDateStr) return;
+        
+        let itemDate = new Date(normalizedDateStr + 'T12:00:00'); // 시간대 오차 방지
         
         // 날짜 필터링 범위 체크
-        if (cmpDate >= startTarget && cmpDate <= endTarget) {
-          hasData = true;
+        if (itemDate >= startDate && itemDate <= endDate) {
           const qty = parseInt(item.qty) || 0;
           if(item.dept) sumDept[item.dept] = (sumDept[item.dept] || 0) + qty;
           if(item.patientName) {
@@ -463,6 +477,10 @@ function loadStatistics() {
         const wrapper = document.getElementById(targetId); wrapper.innerHTML = '';
         const keys = Object.keys(dataObj);
         if(keys.length === 0) { wrapper.innerHTML = '<div class="stats-empty-msg">해당 기간 내 데이터가 없습니다.</div>'; return; }
+        
+        // 정렬: 많이 쓴 부서/환자/종류가 위로 오게 배치
+        keys.sort((a,b) => dataObj[b] - dataObj[a]);
+        
         keys.forEach(k => {
           const row = document.createElement('div'); row.className = 'stats-data-row';
           row.innerHTML = `<span class="stats-data-name">${k}</span><span class="stats-data-count">${dataObj[k]}개</span>`;
@@ -477,7 +495,7 @@ function loadStatistics() {
     .catch(err => {
       document.getElementById('stats-loading-msg').style.display = 'none';
       document.getElementById('stats-initial-msg').style.display = 'block';
-      document.getElementById('stats-initial-msg').textContent = "연동 주소 설정 오류 또는 데이터가 비어 있습니다.";
+      document.getElementById('stats-initial-msg').textContent = "연동 주소 설정 오류 또는 서버가 응답하지 않습니다.";
     });
 }
 
