@@ -4,686 +4,76 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>기저귀 사용 관리</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --primary: #2563EB; --primary-light: #EFF6FF; --primary-dark: #1D4ED8;
-    --accent: #10B981; --accent-light: #ECFDF5; --danger: #EF4444; --warning: #F59E0B;
-    --surface: #FFFFFF; --surface2: #F8FAFC; --border: #E2E8F0;
-    --text: #0F172A; --text2: #64748B; --text3: #94A3B8;
-    --shadow: 0 4px 24px rgba(37,99,235,0.10); --radius: 16px; --radius-sm: 10px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: 'Noto Sans KR', sans-serif; background: #EFF6FF; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
-  #app { width: 100%; max-width: 480px; min-height: 100vh; background: var(--surface); display: flex; flex-direction: column; position: relative; overflow: hidden; }
-  .header { background: var(--primary); color: white; padding: 18px 20px 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(37,99,235,0.25); }
-  .header-row { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; }
-  .header-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
-  .header-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
-  .header-tabs { display: flex; gap: 4px; margin-top: 4px; }
-  .nav-tab-btn { flex: 1; background: rgba(255, 255, 255, 0.15); border: none; color: rgba(255, 255, 255, 0.7); padding: 10px; font-size: 14px; font-weight: 600; font-family: 'Noto Sans KR', sans-serif; border-radius: 8px 8px 0 0; cursor: pointer; transition: all 0.2s; text-align: center; }
-  .nav-tab-btn.active { background: var(--surface); color: var(--primary); }
-  .step-progress { background: var(--surface2); padding: 12px 20px; border-bottom: 1px solid var(--border); }
-  .progress-track { background: var(--border); border-radius: 100px; height: 4px; width: 100%; overflow: hidden; }
-  .progress-fill { background: var(--primary); height: 100%; border-radius: 100px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-  .step-label { color: var(--text2); font-size: 11px; margin-top: 6px; font-weight: 600; }
-  .screen { display: none; flex-direction: column; flex: 1; padding: 24px 20px 100px; animation: slideUp 0.32s cubic-bezier(0.4,0,0.2,1); }
-  .screen.active { display: flex; }
-  @keyframes slideUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-  .screen-title { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; margin-bottom: 4px; }
-  .screen-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
-  .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
-  .option-grid.single { grid-template-columns: 1fr; }
-  .option-card { border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 14px 10px; text-align: center; cursor: pointer; transition: all 0.18s; background: var(--surface2); position: relative; overflow: hidden; }
-  .option-card:active { transform: scale(0.97); }
-  .option-card.selected { border-color: var(--primary); background: var(--primary-light); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
-  .option-card .card-name { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
-  .option-card.selected .card-name { color: var(--primary); }
-  .input-wrap { margin-bottom: 16px; }
-  .input-label { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; display: block; }
-  .text-input { width: 100%; border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; font-size: 15px; font-family: 'Noto Sans KR', sans-serif; color: var(--text); background: var(--surface2); outline: none; transition: border-color 0.18s, box-shadow 0.18s; }
-  .text-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.10); }
-  .qty-wrap { display: flex; align-items: center; gap: 0; border: 2px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface2); }
-  .qty-btn { width: 56px; height: 60px; border: none; background: transparent; font-size: 24px; font-weight: 300; color: var(--primary); cursor: pointer; }
-  .qty-display { flex: 1; text-align: center; font-size: 28px; font-weight: 700; color: var(--text); border: none; background: transparent; outline: none; }
-  .qty-presets-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 14px; margin-bottom: 8px; }
-  .qty-preset-btn { border: 2px solid var(--border); border-radius: 8px; padding: 12px 0; text-align: center; font-size: 15px; font-weight: 700; color: var(--text2); background: var(--surface2); cursor: pointer; transition: all 0.15s; }
-  .qty-preset-btn.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
-  .datetime-card { background: var(--primary); border-radius: var(--radius); padding: 20px; color: white; margin-bottom: 20px; }
-  .dt-date { font-size: 15px; opacity: 0.85; font-weight: 500; margin-bottom: 4px; }
-  .dt-time { font-size: 38px; font-weight: 700; letter-spacing: -1px; }
-  .dt-edit { margin-top: 12px; display: flex; gap: 8px; }
-  .dt-edit input { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; color: white; padding: 14px 12px; font-size: 15px; outline: none; flex: 1; }
-  .dt-edit input::-webkit-calendar-picker-indicator { filter: invert(1); }
-  .info-card { background: var(--surface2); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
-  .info-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
-  .info-row:last-child { border-bottom: none; }
-  .info-key { font-size: 13px; color: var(--text2); font-weight: 500; }
-  .info-val { font-size: 13px; color: var(--text); font-weight: 600; }
-  .bottom-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; padding: 12px 20px 24px; background: white; border-top: 1px solid var(--border); display: flex; gap: 10px; z-index: 200; }
-  .btn-back { border: 2px solid var(--border); background: white; border-radius: var(--radius-sm); padding: 14px 20px; font-size: 15px; font-weight: 600; color: var(--text2); cursor: pointer; }
-  .btn-next { flex: 1; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(37,99,235,0.28); }
-  .btn-next:disabled { background: var(--border); color: var(--text3); box-shadow: none; cursor: not-allowed; }
-  .success-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; padding: 40px 20px; }
-  .success-icon { width: 80px; height: 80px; background: var(--accent-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-  .success-icon svg { color: var(--accent); }
-  .success-title { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-  .success-sub { font-size: 14px; color: var(--text2); line-height: 1.7; }
-  .success-actions { display: flex; gap: 10px; width: 100%; margin-top: 8px; }
-  .btn-primary-solid { flex: 1; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer; }
-  
-  /* 通계 스타일 고도화 */
-  .stats-filter-card { background: var(--surface2); border: 2px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
-  .stats-date-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-  .stats-date-row input { flex: 1; border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 14px; outline: none; font-family: inherit; text-align: center; background: white; }
-  .btn-stats-search { width: 100%; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
-  .stats-section-title { font-size: 16px; font-weight: 700; color: var(--text); margin: 24px 0 12px; padding-left: 8px; border-left: 4px solid var(--primary); }
-  .stats-data-list { display: flex; flex-direction: column; gap: 8px; }
-  .stats-data-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 16px; border: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
-  .stats-data-row:hover { background: #f1f5f9; }
-  .stats-data-name { font-size: 14px; font-weight: 600; color: var(--text); }
-  .stats-data-count { font-size: 15px; font-weight: 700; color: var(--primary); }
-  .stats-empty-msg { text-align: center; color: var(--text3); font-size: 13px; padding: 30px 0; }
-  
-  /* 병동 아코디언(클릭형) 디자인 */
-  .dept-accordion-card { background: #ffffff; border: 2px solid #E2E8F0; border-radius: 14px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: border-color 0.2s; }
-  .dept-accordion-card.active { border-color: #2563EB; }
-  .dept-accordion-header { background: var(--surface2); padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
-  .dept-accordion-card.active .dept-accordion-header { background: #EFF6FF; }
-  .dept-title { font-size: 16px; font-weight: 700; color: var(--text); }
-  .dept-accordion-card.active .dept-title { color: #2563EB; }
-  .dept-total-badge { font-size: 14px; font-weight: 700; color: #2563EB; background: white; padding: 4px 10px; border-radius: 20px; border: 1px solid #E2E8F0; }
-  .dept-accordion-content { display: none; padding: 16px; background: white; border-top: 1px solid var(--border); }
-  .sub-section-title { font-size: 13px; font-weight: 700; color: #475569; margin: 14px 0 8px; padding-left: 6px; border-left: 3px solid #64748B; }
-  .sub-section-title:first-child { margin-top: 0; }
-
-  /* 환자/상세 모달창 스타일 */
-  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-  .modal-content { background: white; width: 92%; max-width: 420px; border-radius: var(--radius); padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideUp 0.2s ease-out; max-height: 80vh; display: flex; flex-direction: column; }
-  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
-  .modal-sub { font-size: 12px; color: var(--text2); margin-bottom: 16px; }
-  .modal-scroll-area { flex: 1; overflow-y: auto; padding-right: 4px; }
-  .modal-close-btn { width: 100%; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 16px; box-shadow: 0 4px 10px rgba(37,99,235,0.2); }
+:root { --primary: #2563EB; --primary-light: #EFF6FF; --surface: #FFFFFF; --surface2: #F8FAFC; --border: #E2E8F0; --text: #0F172A; --text2: #64748B; }
+body { font-family: sans-serif; background: #EFF6FF; margin: 0; display: flex; justify-content: center; }
+#app { width: 100%; max-width: 480px; min-height: 100vh; background: white; }
+.header { background: var(--primary); color: white; padding: 20px; }
+.tabs { display: flex; gap: 5px; margin-top: 10px; }
+.tab-btn { flex: 1; padding: 10px; border: none; background: rgba(255,255,255,0.2); color: white; cursor: pointer; border-radius: 5px; }
+.tab-btn.active { background: white; color: var(--primary); }
+.screen { display: none; padding: 20px; }
+.screen.active { display: block; }
+.input-group { margin-bottom: 15px; }
+input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 5px; box-sizing: border-box; }
+button.main-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+.stats-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border); }
 </style>
 </head>
 <body>
 <div id="app">
   <div class="header">
-    <div class="header-row">
-      <div>
-        <div class="header-title">기저귀 사용 관리</div>
-        <div class="header-sub">요양병원 스마트 기록 시스템</div>
-      </div>
-    </div>
-    <div class="header-tabs">
-      <button class="nav-tab-btn active" id="tab-record" onclick="switchMainTab('record')">기저귀 기록</button>
-      <button class="nav-tab-btn" id="tab-stats" onclick="switchMainTab('stats')">통계 확인</button>
+    <div style="font-weight:bold; font-size:18px;">기저귀 사용 관리</div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showScreen('record')">기록하기</button>
+      <button class="tab-btn" onclick="showScreen('stats')">통계보기</button>
     </div>
   </div>
 
-  <div id="main-stats-area" style="display: none; flex-direction: column; flex: 1; padding: 24px 20px 100px; overflow-y: auto;">
-    <div class="screen-title">사용 통계 조회</div>
-    <div class="screen-sub">지정된 날짜 범위 내의 사용량을 실시간으로 집계합니다.</div>
-    <div class="stats-filter-card">
-      <div class="stats-date-row">
-        <input type="date" id="statsStartDate">
-        <span style="color:var(--text2); font-weight:bold;">~</span>
-        <input type="date" id="statsEndDate">
-      </div>
-      <button class="btn-stats-search" onclick="loadStatistics()">조회하기</button>
-    </div>
-    
-    <div id="stats-result-container" style="display:none;">
-      <div class="stats-section-title">🏢 병동별 통계 (클릭 시 세부내역 전개)</div>
-      <div id="stats-dept-accordion-container"></div>
-
-      <div class="stats-section-title">👥 전체 환자별 사용량 (이름 클릭 시 상세)</div>
-      <div id="stats-patient-list" class="stats-data-list"></div>
-
-      <div class="stats-section-title">✨ 기저귀 종류별 총 사용량</div>
-      <div id="stats-diaper-list" class="stats-data-list"></div>
-    </div>
-    
-    <div id="stats-loading-msg" class="stats-empty-msg" style="display:none; font-weight: 600; color: var(--primary);">구글 스프레드시트 데이터 불러오는 중...</div>
-    <div id="stats-initial-msg" class="stats-empty-msg">날짜를 설정하고 조회하기 버튼을 눌러주세요.</div>
+  <div id="screen-record" class="screen active">
+    <div class="input-group">환자이름: <input type="text" id="pName"></div>
+    <div class="input-group">환자번호: <input type="text" id="pId"></div>
+    <div class="input-group">수량: <input type="number" id="qty" value="1"></div>
+    <button class="main-btn" onclick="saveData()">저장하기</button>
   </div>
 
-  <div id="main-record-area" style="display: flex; flex-direction: column; flex: 1;">
-    <div class="step-progress" id="stepProgress">
-      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:14%"></div></div>
-      <div class="step-label" id="stepLabel">1단계 / 7단계</div>
-    </div>
-
-    <div class="screen active" id="screen1">
-      <div class="screen-title">사용 환자</div>
-      <div class="screen-sub">환자의 정보를 모두 입력해 주세요.</div>
-      <div class="input-wrap">
-        <span class="input-label">환자 이름</span>
-        <input type="text" class="text-input" id="patientName" placeholder="홍길동" oninput="validateCurrentScreen();" style="font-size:20px;font-weight:700;">
-      </div>
-      <div class="input-wrap">
-        <span class="input-label">환자 번호</span>
-        <input type="text" class="text-input" id="patientId" placeholder="예: 12345" oninput="validateCurrentScreen();">
-      </div>
-      <div class="input-wrap">
-        <span class="input-label">병실</span>
-        <input type="text" class="text-input" id="roomNo" placeholder="예: 301" oninput="validateCurrentScreen();">
-      </div>
-    </div>
-
-    <div class="screen" id="screen2">
-      <div class="screen-title">기저귀 구분</div>
-      <div class="screen-sub">사용한 기저귀 대분류를 선택해 주세요.</div>
-      <div class="option-grid single">
-        <div class="option-card" onclick="selectDiaperCat(this,'팬티형기저귀')"><div class="card-name">팬티형 기저귀</div></div>
-        <div class="option-card" onclick="selectDiaperCat(this,'겉기저귀')"><div class="card-name">겉 기저귀</div></div>
-        <div class="option-card" onclick="selectDiaperCat(this,'속기저귀')"><div class="card-name">속 기저귀</div></div>
-        <div class="option-card" onclick="selectDiaperCat(this,'위생깔개매트')"><div class="card-name">위생 깔개 매트</div></div>
-      </div>
-    </div>
-
-    <div class="screen" id="screen3">
-      <div class="screen-title">기저귀 종류</div>
-      <div class="screen-sub">세부 종류를 선택해 주세요.</div>
-      <div class="option-grid single" id="diaperTypeGrid"></div>
-    </div>
-
-    <div class="screen" id="screen4">
-      <div class="screen-title">사용 갯수</div>
-      <div class="screen-sub">사용한 수량을 입력해 주세요.</div>
-      <div class="qty-wrap">
-        <button class="qty-btn" onclick="changeQty(-1)">-</button>
-        <input type="number" class="qty-display" id="qtyDisplay" value="1" min="1" oninput="validateCurrentScreen()">
-        <button class="qty-btn" onclick="changeQty(1)">+</button>
-      </div>
-      <div class="qty-presets-grid">
-        <button class="qty-preset-btn selected" onclick="setPresetQty(1, this)">1개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(2, this)">2개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(3, this)">3개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(4, this)">4개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(5, this)">5개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(6, this)">6개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(7, this)">7개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(8, this)">8개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(9, this)">9개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(10, this)">10개</button>
-      </div>
-      <div class="info-card" style="margin-top:16px;">
-        <div class="info-row"><span class="info-key">환자 이름</span><span class="info-val" id="rev-patient">-</span></div>
-        <div class="info-row"><span class="info-key">기저귀 종류</span><span class="info-val" id="rev-diaper">-</span></div>
-      </div>
-    </div>
-
-    <div class="screen" id="screen5">
-      <div class="screen-title">날짜 및 시간</div>
-      <div class="datetime-card">
-        <div class="dt-date" id="dtDateDisp"></div>
-        <div class="dt-time" id="dtTimeDisp"></div>
-        <div class="dt-edit">
-          <input type="date" id="dtDate">
-          <input type="time" id="dtTime">
-        </div>
-      </div>
-    </div>
-
-    <div class="screen" id="screen6">
-      <div class="screen-title">사용 부서 선택</div>
-      <div class="option-grid">
-        <div class="option-card" onclick="selectOption('dept','2A병동', this)">2A병동</div>
-        <div class="option-card" onclick="selectOption('dept','2B병동', this)">2B병동</div>
-        <div class="option-card" onclick="selectOption('dept','3A병동', this)">3A병동</div>
-        <div class="option-card" onclick="selectOption('dept','3B병동', this)">3B병동</div>
-        <div class="option-card" onclick="selectOption('dept','5병동', this)">5병동</div>
-      </div>
-    </div>
-
-    <div class="screen" id="screen7">
-      <div class="screen-title">입력 직원 정보</div>
-      <div class="option-grid single" style="margin-bottom: 15px;">
-        <div class="option-card" onclick="selectOption('staffType','간호사', this)">간호사/직원</div>
-        <div class="option-card" onclick="selectOption('staffType','간병사', this)">간병사</div>
-      </div>
-      <div class="input-wrap">
-        <span class="input-label">직원 이름</span>
-        <input type="text" class="text-input" id="staffName" placeholder="이름을 입력하세요" oninput="validateCurrentScreen();">
-      </div>
-    </div>
-
-    <div class="screen" id="screen8">
-      <div class="success-wrap">
-        <div class="success-icon">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <polyline points="8,20 16,28 32,12" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="success-title" id="saveStatusTitle">엑셀 저장 중...</div>
-        <div class="success-sub" id="saveStatusSub">잠시만 기다려주세요.</div>
-        <div class="success-actions" id="successActions" style="display:none;">
-          <button class="btn-primary-solid" onclick="resetForm()">새로 입력하기</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="bottom-bar" id="bottomBar">
-      <button class="btn-back" id="btnBack" onclick="goBack()">이전</button>
-      <button class="btn-next" id="btnNext" onclick="goNext()">다음</button>
-    </div>
-  </div>
-</div>
-
-<div id="patientModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-title" id="modalPatientName">환자 상세 통계</div>
-    <div class="modal-sub" id="modalPatientPeriod">조회 기간</div>
-    <div class="modal-scroll-area">
-      <div id="modalDiaperList" class="stats-data-list"></div>
-    </div>
-    <button class="modal-close-btn" onclick="closePatientModal()">닫기</button>
+  <div id="screen-stats" class="screen">
+    <button class="main-btn" onclick="loadStats()">데이터 불러오기</button>
+    <div id="stats-result" style="margin-top:20px;"></div>
   </div>
 </div>
 
 <script>
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuo-UYQr3NmHJuGY2v-w4KcOObRfv2YX9Xs6CY9CQDxqhB2cOW_MxtuFToY8fu_CEN/exec";
+// 배포한 웹앱 URL을 아래에 정확히 넣으세요
+const URL = "https://script.google.com/macros/s/AKfycbzuo-UYQr3NmHJuGY2v-w4KcOObRfv2YX9Xs6CY9CQDxqhB2cOW_MxtuFToY8fu_CEN/exec";
 
-const state = {
-  currentScreen: 1, totalScreens: 7,
-  data: { date: '', time: '', dept: '', staffType: '', staffName: '', patientName: '', patientId: '', roomNo: '', diaperCat: '', diaperType: '', qty: 1 }
-};
-
-const diaperTypes = {
-  '팬티형기저귀': [{name:'서림 중형'}, {name:'서림 대형'}, {name:'서림 특대'}, {name:'테나 중형'}, {name:'라이프리 중형'}, {name:'디펜드 중형'}, {name:'자가'}],
-  '겉기저귀': [{name:'포인트 대형'}, {name:'이지스 중형'}, {name:'자가'}],
-  '속기저귀': [{name:'포인트 일자형'}, {name:'자가'}],
-  '위생깔개매트': [{name:'포인트 깔개매트'}, {name:'자가'}]
-};
-
-let globalPatientDetails = {}; 
-
-function init() {
-  const now = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  state.data.date = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-  state.data.time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  document.getElementById('dtDate').value = state.data.date;
-  document.getElementById('dtTime').value = state.data.time;
-  document.getElementById('statsStartDate').value = state.data.date;
-  document.getElementById('statsEndDate').value = state.data.date;
-  updateDateDisplay();
-  validateCurrentScreen();
+function showScreen(type) {
+  document.getElementById('screen-record').className = type === 'record' ? 'screen active' : 'screen';
+  document.getElementById('screen-stats').className = type === 'stats' ? 'screen active' : 'screen';
 }
 
-function updateDateDisplay() {
-  document.getElementById('dtDateDisp').textContent = state.data.date;
-  document.getElementById('dtTimeDisp').textContent = state.data.time;
+function saveData() {
+  const data = {
+    patientName: document.getElementById('pName').value,
+    patientId: document.getElementById('pId').value,
+    qty: document.getElementById('qty').value
+  };
+  const qs = new URLSearchParams(data).toString();
+  fetch(URL + "?" + qs, { method: "POST" })
+  .then(() => alert("저장되었습니다!"));
 }
 
-document.getElementById('dtDate').addEventListener('input', function() { state.data.date = this.value; updateDateDisplay(); });
-document.getElementById('dtTime').addEventListener('input', function() { state.data.time = this.value; updateDateDisplay(); });
-
-function switchMainTab(tab) {
-  const btnRecord = document.getElementById('tab-record');
-  const btnStats = document.getElementById('tab-stats');
-  const areaRecord = document.getElementById('main-record-area');
-  const areaStats = document.getElementById('main-stats-area');
-  if (tab === 'record') {
-    btnRecord.classList.add('active'); btnStats.classList.remove('active');
-    areaRecord.style.display = 'flex'; areaStats.style.display = 'none';
-  } else {
-    btnRecord.classList.remove('active'); btnStats.classList.add('active');
-    areaRecord.style.display = 'none'; areaStats.style.display = 'flex';
-    loadStatistics();
-  }
-}
-
-function goTo(screenNum) {
-  for (let i = 1; i <= 8; i++) document.getElementById('screen' + i).classList.remove('active');
-  document.getElementById('screen' + screenNum).classList.add('active');
-  state.currentScreen = screenNum;
-  const sp = document.getElementById('stepProgress');
-  const bb = document.getElementById('bottomBar');
-  if (screenNum === 8) {
-    sp.style.display = 'none'; bb.style.display = 'none';
-    saveDataToGoogle();
-  } else {
-    sp.style.display = ''; bb.style.display = '';
-    document.getElementById('progressFill').style.width = Math.round((screenNum / state.totalScreens) * 100) + '%';
-    document.getElementById('stepLabel').textContent = screenNum + "단계 / 7단계";
-  }
-  validateCurrentScreen();
-}
-
-function goNext() { if(state.currentScreen < 8) goTo(state.currentScreen + 1); }
-function goBack() { if(state.currentScreen > 1) goTo(state.currentScreen - 1); }
-
-function validateCurrentScreen() {
-  let isValid = false;
-  if (state.currentScreen === 1) {
-    isValid = document.getElementById('patientName').value.trim() && document.getElementById('patientId').value.trim() && document.getElementById('roomNo').value.trim();
-  } else if (state.currentScreen === 2) {
-    isValid = state.data.diaperCat;
-  } else if (state.currentScreen === 3) {
-    isValid = state.data.diaperType;
-  } else if (state.currentScreen === 4) {
-    state.data.qty = parseInt(document.getElementById('qtyDisplay').value) || 1;
-    document.getElementById('rev-patient').textContent = document.getElementById('patientName').value;
-    document.getElementById('rev-diaper').textContent = state.data.diaperType;
-    isValid = state.data.qty > 0;
-  } else if (state.currentScreen === 5 || state.currentScreen === 6) {
-    isValid = true;
-  } else if (state.currentScreen === 7) {
-    isValid = state.data.staffType && document.getElementById('staffName').value.trim();
-    state.data.staffName = document.getElementById('staffName').value.trim();
-  }
-  document.getElementById('btnNext').disabled = !isValid;
-}
-
-function selectDiaperCat(el, cat) {
-  state.data.diaperCat = cat; state.data.diaperType = '';
-  const cards = el.parentElement.querySelectorAll('.option-card');
-  cards.forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  const grid = document.getElementById('diaperTypeGrid');
-  grid.innerHTML = '';
-  diaperTypes[cat].forEach(t => {
-    const div = document.createElement('div');
-    div.className = 'option-card';
-    div.innerHTML = `<div class="card-name">${t.name}</div>`;
-    div.onclick = function() {
-      state.data.diaperType = t.name;
-      grid.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
-      div.classList.add('selected');
-      validateCurrentScreen();
-    };
-    grid.appendChild(div);
-  });
-  validateCurrentScreen();
-}
-
-function selectOption(field, val, el) {
-  state.data[field] = val;
-  const cards = el.parentElement.querySelectorAll('.option-card');
-  cards.forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  validateCurrentScreen();
-}
-
-function changeQty(n) {
-  const disp = document.getElementById('qtyDisplay');
-  let val = (parseInt(disp.value) || 1) + n;
-  if(val < 1) val = 1;
-  disp.value = val;
-  const presetBtns = document.querySelectorAll('.qty-preset-btn');
-  presetBtns.forEach(btn => btn.classList.remove('selected'));
-  if (val <= 10) presetBtns[val - 1].classList.add('selected');
-  validateCurrentScreen();
-}
-
-function setPresetQty(num, btnElement) {
-  document.getElementById('qtyDisplay').value = num;
-  const presetBtns = document.querySelectorAll('.qty-preset-btn');
-  presetBtns.forEach(btn => btn.classList.remove('selected'));
-  btnElement.classList.add('selected');
-  validateCurrentScreen();
-}
-
-function saveDataToGoogle() {
-  state.data.patientName = document.getElementById('patientName').value.trim();
-  state.data.patientId = document.getElementById('patientId').value.trim();
-  state.data.roomNo = document.getElementById('roomNo').value.trim();
-  
-  const searchParams = new URLSearchParams();
-  for (const key in state.data) {
-    searchParams.append(key, state.data[key]);
-  }
-
-  fetch(GOOGLE_SCRIPT_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: searchParams.toString()
-  })
-  .then(() => {
-    document.getElementById('saveStatusTitle').textContent = "저장 완료!";
-    document.getElementById('saveStatusSub').textContent = "스프레드시트에 실시간 기록되었습니다.";
-    document.getElementById('successActions').style.display = 'flex';
-  })
-  .catch(err => {
-    document.getElementById('saveStatusTitle').textContent = "확인 필요";
-    document.getElementById('saveStatusSub').textContent = "전송 과정에 문제가 발생했습니다. 네트워크를 확인해 주세요.";
-    document.getElementById('successActions').style.display = 'flex';
+function loadStats() {
+  fetch(URL)
+  .then(res => res.json())
+  .then(data => {
+    let html = "";
+    data.forEach(row => {
+      html += `<div class="stats-row"><span>${row.patientName}</span><span>${row.qty}개</span></div>`;
+    });
+    document.getElementById('stats-result').innerHTML = html;
   });
 }
-
-function parseToDateString(dStr) {
-  if (!dStr) return '';
-  let clean = String(dStr).replace(/[^0-9]/g, '');
-  if (clean.length === 8) {
-    return `${clean.substring(0,4)}-${clean.substring(4,6)}-${clean.substring(6,8)}`;
-  }
-  try {
-    const d = new Date(dStr);
-    if(!isNaN(d.getTime())) {
-      const pad = (n) => String(n).padStart(2, '0');
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    }
-  } catch(e){}
-  return '';
-}
-
-// 📊 통계 데이터 가공 및 출력 제어 로직
-function loadStatistics() {
-  const startInput = document.getElementById('statsStartDate').value;
-  const endInput = document.getElementById('statsEndDate').value;
-  if(!startInput || !endInput) { alert("날짜를 지정해 주세요."); return; }
-
-  document.getElementById('stats-initial-msg').style.display = 'none';
-  document.getElementById('stats-loading-msg').style.display = 'block';
-  document.getElementById('stats-result-container').style.display = 'none';
-
-  fetch(GOOGLE_SCRIPT_URL)
-    .then(res => res.json())
-    .then(rows => {
-      document.getElementById('stats-loading-msg').style.display = 'none';
-      document.getElementById('stats-result-container').style.display = 'block';
-      
-      const deptGroups = {}; 
-      const totalPatients = {}; 
-      const totalDiapers = {}; 
-      globalPatientDetails = {}; 
-
-      rows.forEach(item => {
-        let rawDate = item.date ? String(item.date).split('T')[0].trim() : '';
-        let normalizedDateStr = parseToDateString(rawDate) || rawDate;
-        if (!normalizedDateStr) return;
-
-        if (normalizedDateStr >= startInput && normalizedDateStr <= endInput) {
-          const qty = parseInt(item.qty) || 0;
-          const dept = item.dept ? item.dept.trim() : "미지정 부서";
-          
-          let catName = (item.diaperCat || "미확인").trim();
-          if(catName === "팬티형기저귀") catName = "팬티형 기저귀";
-          if(catName === "겉기저귀") catName = "겉 기저귀";
-          if(catName === "속기저귀") catName = "속 기저귀";
-          if(catName === "위생깔개매트") catName = "위생 깔개 매트";
-          const formattedType = item.diaperType ? `${catName} - ${item.diaperType.trim()}` : "기저귀 유형 누락";
-
-          let pKey = "미확인 환자";
-          if(item.patientName) {
-            const pId = item.patientId ? String(item.patientId).trim() : '미지정';
-            const rNo = item.roomNo ? String(item.roomNo).trim() : '';
-            const roomString = rNo ? (rNo.includes('호') ? rNo : rNo + '호') : '미지정';
-            pKey = `${String(item.patientName).trim()}(${pId} / ${roomString})`;
-          }
-
-          // 병동 데이터 누적
-          if (!deptGroups[dept]) {
-            deptGroups[dept] = { total: 0, patients: {}, diapers: {} };
-          }
-          deptGroups[dept].total += qty;
-          deptGroups[dept].patients[pKey] = (deptGroups[dept].patients[pKey] || 0) + qty;
-          deptGroups[dept].diapers[formattedType] = (deptGroups[dept].diapers[formattedType] || 0) + qty;
-
-          // 전체 환자 누적
-          totalPatients[pKey] = (totalPatients[pKey] || 0) + qty;
-
-          // 전체 기저귀 종류별 누적
-          totalDiapers[formattedType] = (totalDiapers[formattedType] || 0) + qty;
-
-          // 환자 상세 팝업용 누적
-          if (!globalPatientDetails[pKey]) {
-            globalPatientDetails[pKey] = {};
-          }
-          globalPatientDetails[pKey][formattedType] = (globalPatientDetails[pKey][formattedType] || 0) + qty;
-        }
-      });
-
-      // 렌더링 1: 병동별 아코디언 카드 생성
-      const accordionContainer = document.getElementById('stats-dept-accordion-container');
-      accordionContainer.innerHTML = '';
-      const depts = Object.keys(deptGroups).sort();
-
-      if(depts.length === 0) {
-        accordionContainer.innerHTML = '<div class="stats-empty-msg">지정된 기간 내에 저장된 데이터가 없습니다.</div>';
-        document.getElementById('stats-patient-list').innerHTML = '';
-        document.getElementById('stats-diaper-list').innerHTML = '';
-        return;
-      }
-
-      depts.forEach(deptName => {
-        const group = deptGroups[deptName];
-        
-        const card = document.createElement('div');
-        card.className = 'dept-accordion-card';
-        
-        const header = document.createElement('div');
-        header.className = 'dept-accordion-header';
-        header.innerHTML = `<span class="dept-title">📍 ${deptName}</span><span class="dept-total-badge">총 ${group.total}개 ▾</span>`;
-        
-        const content = document.createElement('div');
-        content.className = 'dept-accordion-content';
-
-        // 병동 내 환자별 통계 작성
-        const pTitle = document.createElement('div');
-        pTitle.className = 'sub-section-title';
-        pTitle.textContent = '👥 소속 환자별 사용 통계';
-        content.appendChild(pTitle);
-
-        const pList = document.createElement('div');
-        pList.className = 'stats-data-list';
-        Object.keys(group.patients).sort((a,b) => group.patients[b] - group.patients[a]).forEach(pk => {
-          const r = document.createElement('div');
-          r.className = 'stats-data-row';
-          r.style.cursor = 'default';
-          r.innerHTML = `<span class="stats-data-name">${pk}</span><span class="stats-data-count">${group.patients[pk]}개</span>`;
-          pList.appendChild(r);
-        });
-        content.appendChild(pList);
-
-        // 병동 내 기저귀별 통계 작성
-        const dTitle = document.createElement('div');
-        dTitle.className = 'sub-section-title';
-        dTitle.textContent = '✨ 사용 기저귀 종류별 통계';
-        content.appendChild(dTitle);
-
-        const dList = document.createElement('div');
-        dList.className = 'stats-data-list';
-        Object.keys(group.diapers).sort((a,b) => group.diapers[b] - group.diapers[a]).forEach(dk => {
-          const r = document.createElement('div');
-          r.className = 'stats-data-row';
-          r.style.cursor = 'default';
-          r.innerHTML = `<span class="stats-data-name">${dk}</span><span class="stats-data-count" style="color:var(--warning);">${group.diapers[dk]}개</span>`;
-          dList.appendChild(r);
-        });
-        content.appendChild(dList);
-
-        // 아코디언 토글 이벤트 연결
-        header.onclick = function() {
-          const isOpen = card.classList.contains('active');
-          document.querySelectorAll('.dept-accordion-card').forEach(c => {
-            c.classList.remove('active');
-            c.querySelector('.dept-accordion-content').style.display = 'none';
-          });
-          if(!isOpen) {
-            card.classList.add('active');
-            content.style.display = 'block';
-          }
-        };
-
-        card.appendChild(header);
-        card.appendChild(content);
-        accordionContainer.appendChild(card);
-      });
-
-      // 렌더링 2: 전체 환자별 통계 목록 (클릭 시 지정 기간 팝업 발생)
-      const patientContainer = document.getElementById('stats-patient-list');
-      patientContainer.innerHTML = '';
-      Object.keys(totalPatients).sort((a,b) => totalPatients[b] - totalPatients[a]).forEach(pName => {
-        const row = document.createElement('div');
-        row.className = 'stats-data-row';
-        row.onclick = function() { openPatientModal(pName, startInput, endInput); };
-        row.innerHTML = `<span class="stats-data-name">👤 ${pName}</span><span class="stats-data-count">${totalPatients[pName]}개 ></span>`;
-        patientContainer.appendChild(row);
-      });
-
-      // 렌더링 3: 전체 기저귀 구분 및 종류별 통계 목록
-      const diaperContainer = document.getElementById('stats-diaper-list');
-      diaperContainer.innerHTML = '';
-      Object.keys(totalDiapers).sort((a,b) => totalDiapers[b] - totalDiapers[a]).forEach(dType => {
-        const row = document.createElement('div');
-        row.className = 'stats-data-row';
-        row.style.cursor = 'default';
-        row.innerHTML = `<span class="stats-data-name">📦 ${dType}</span><span class="stats-data-count" style="color:var(--warning);">${totalDiapers[dType]}개</span>`;
-        diaperContainer.appendChild(row);
-      });
-
-    })
-    .catch(err => {
-      document.getElementById('stats-loading-msg').style.display = 'none';
-      document.getElementById('stats-initial-msg').style.display = 'block';
-      document.getElementById('stats-initial-msg').textContent = "연동 주소 설정 오류 또는 구글 서버 응답에 에러가 있습니다.";
-    });
-}
-
-// 환자 터치 시 지정 기간 동안의 기저귀 세부 사용 내역 팝업 제어
-function openPatientModal(patientKey, start, end) {
-  document.getElementById('modalPatientName').textContent = `👤 ${patientKey} 사용 내역`;
-  document.getElementById('modalPatientPeriod').textContent = `선택 기간: ${start} ~ ${end}`;
-  
-  const listContainer = document.getElementById('modalDiaperList');
-  listContainer.innerHTML = '';
-  
-  const patientData = globalPatientDetails[patientKey] || {};
-  const sortedDiapers = Object.keys(patientData).sort((a,b) => patientData[b] - patientData[a]);
-  
-  if(sortedDiapers.length === 0) {
-    listContainer.innerHTML = '<div class="stats-empty-msg">기록된 상세 데이터가 존재하지 않습니다.</div>';
-  } else {
-    sortedDiapers.forEach(dName => {
-      const row = document.createElement('div');
-      row.className = 'stats-data-row';
-      row.style.cursor = 'default';
-      row.innerHTML = `<span class="stats-data-name">${dName}</span><span class="stats-data-count">${patientData[dName]}개</span>`;
-      listContainer.appendChild(row);
-    });
-  }
-  
-  document.getElementById('patientModal').style.display = 'flex';
-}
-
-function closePatientModal() {
-  document.getElementById('patientModal').style.display = 'none';
-}
-
-function resetForm() {
-  document.getElementById('patientName').value = ''; document.getElementById('patientId').value = ''; document.getElementById('roomNo').value = ''; document.getElementById('staffName').value = ''; document.getElementById('qtyDisplay').value = 1;
-  state.data = { date: '', time: '', dept: '', staffType: '', staffName: '', patientName: '', patientId: '', roomNo: '', diaperCat: '', diaperType: '', qty: 1 };
-  document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
-  const presetBtns = document.querySelectorAll('.qty-preset-btn');
-  presetBtns.forEach(btn => btn.classList.remove('selected'));
-  presetBtns[0].classList.add('selected');
-  init(); goTo(1);
-}
-window.onload = init;
 </script>
 </body>
 </html>
