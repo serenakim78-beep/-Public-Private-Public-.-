@@ -434,14 +434,10 @@ function parseToDateString(dStr) {
   return '';
 }
 
-// 오직 통계 가공 및 UI 빌드 구조만 완벽히 수정되었습니다.
 function loadStatistics() {
   const startInput = document.getElementById('statsStartDate').value;
   const endInput = document.getElementById('statsEndDate').value;
   if(!startInput || !endInput) { alert("날짜를 지정해 주세요."); return; }
-  
-  const startDate = new Date(startInput + 'T00:00:00');
-  const endDate = new Date(endInput + 'T23:59:59');
 
   document.getElementById('stats-initial-msg').style.display = 'none';
   document.getElementById('stats-loading-msg').style.display = 'block';
@@ -453,23 +449,18 @@ function loadStatistics() {
       document.getElementById('stats-loading-msg').style.display = 'none';
       document.getElementById('stats-result-container').style.display = 'block';
       
-      // 병동별 객체로 트리 가공 구조 정의
       const deptGroups = {};
 
       rows.forEach(item => {
-        let normalizedDateStr = parseToDateString(item.date);
-        if (!normalizedDateStr && item.date) {
-          normalizedDateStr = String(item.date).split('T')[0];
-        }
+        let rawDate = item.date ? String(item.date).split('T')[0].trim() : '';
+        let normalizedDateStr = parseToDateString(rawDate) || rawDate;
+        
         if (!normalizedDateStr) return;
-        
-        let itemDate = new Date(normalizedDateStr + 'T12:00:00');
-        
-        if (itemDate >= startDate && itemDate <= endDate) {
+
+        if (normalizedDateStr >= startInput && normalizedDateStr <= endInput) {
           const qty = parseInt(item.qty) || 0;
           const dept = item.dept ? item.dept.trim() : "미지정 부서";
           
-          // 기저귀 텍스트 포맷 매칭 유지
           let catName = (item.diaperCat || "미확인").trim();
           if(catName === "팬티형기저귀") catName = "팬티형 기저귀";
           if(catName === "겉기저귀") catName = "겉 기저귀";
@@ -477,7 +468,6 @@ function loadStatistics() {
           if(catName === "위생깔개매트") catName = "위생 깔개 매트";
           const formattedType = item.diaperType ? `${catName} - ${item.diaperType.trim()}` : "기저귀 유형 누락";
 
-          // 환자 키값 포맷 매칭 유지
           let pKey = "미확인 환자";
           if(item.patientName) {
             const pId = item.patientId ? String(item.patientId).trim() : '미지정';
@@ -486,7 +476,6 @@ function loadStatistics() {
             pKey = `${String(item.patientName).trim()}(${pId} / ${roomString})`;
           }
 
-          // 병동 그룹 초기화 및 누적
           if (!deptGroups[dept]) {
             deptGroups[dept] = { total: 0, patients: {}, diapers: {} };
           }
@@ -505,21 +494,17 @@ function loadStatistics() {
         return;
       }
 
-      // 병동명 순 정렬 출력
       depts.sort().forEach(deptName => {
         const group = deptGroups[deptName];
 
-        // 1. 병동 그룹 큰 카드 생성
         const groupCard = document.createElement('div');
         groupCard.className = 'dept-group-card';
 
-        // 2. 병동 타이틀 및 총합계 헤더 생성
         const groupTitle = document.createElement('div');
         groupTitle.className = 'dept-group-title';
         groupTitle.innerHTML = `<span>📍 ${deptName}</span><span>총 ${group.total}개</span>`;
         groupCard.appendChild(groupTitle);
 
-        // 3. 내부 [환자별 사용 통계] 렌더링
         const pSectionTitle = document.createElement('div');
         pSectionTitle.className = 'sub-section-title';
         pSectionTitle.textContent = '👥 환자별 사용 통계';
@@ -537,7 +522,6 @@ function loadStatistics() {
         });
         groupCard.appendChild(pListWrapper);
 
-        // 4. 내부 [기저귀 종류별 통계] 렌더링
         const dSectionTitle = document.createElement('div');
         dSectionTitle.className = 'sub-section-title';
         dSectionTitle.textContent = '✨ 기저귀 종류별 통계';
@@ -555,7 +539,6 @@ function loadStatistics() {
         });
         groupCard.appendChild(dListWrapper);
 
-        // 전체 컨테이너에 카드 추가
         container.appendChild(groupCard);
       });
     })
@@ -579,4 +562,3 @@ window.onload = init;
 </script>
 </body>
 </html>
-
