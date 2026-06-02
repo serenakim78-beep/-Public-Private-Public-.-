@@ -452,7 +452,6 @@ function loadStatistics() {
       const sumDept = {}, sumPatient = {}, sumType = {};
 
       rows.forEach(item => {
-        // 💡 [날짜 예외 우회 처리] 날짜 변환 실패 시 무조건 스킵하지 않고 안전하게 형식화
         let normalizedDateStr = parseToDateString(item.date);
         if (!normalizedDateStr && item.date) {
           normalizedDateStr = String(item.date).split('T')[0];
@@ -469,16 +468,17 @@ function loadStatistics() {
             sumPatient[pKey] = (sumPatient[pKey] || 0) + qty;
           }
           
-          // 💡 [핵심 집계 로직 교체] 기저귀 구분 명칭과 종류 명칭을 "구분 - 종류" 형태로 일관성 있게 병합 처리
+          // 💡 [핵심 보정] 데이터에 매핑 조건(if)을 없애고 어떤 데이터가 들어오든 무조건 "[구분] - [종류]" 문자열을 완벽하게 생성하도록 보정했습니다.
           if(item.diaperType) {
-            let catName = item.diaperCat || "";
-            // 가독성을 위한 명칭 매핑 공백 보정 (필요 시 수행)
+            let catName = (item.diaperCat || "미확인").trim();
+            
+            // 데이터 표기 통일성을 위해 공백 유무를 한 방향으로 정규화합니다.
             if(catName === "팬티형기저귀") catName = "팬티형 기저귀";
             if(catName === "겉기저귀") catName = "겉 기저귀";
             if(catName === "속기저귀") catName = "속 기저귀";
             if(catName === "위생깔개매트") catName = "위생 깔개 매트";
 
-            const typeKey = catName ? `${catName} - ${item.diaperType}` : item.diaperType;
+            const typeKey = `${catName} - ${item.diaperType.trim()}`;
             sumType[typeKey] = (sumType[typeKey] || 0) + qty;
           }
         }
