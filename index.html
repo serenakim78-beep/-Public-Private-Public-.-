@@ -259,7 +259,6 @@ const diaperTypes = {
   '위생깔개매트': [{name:'포인트 깔개매트'}, {name:'자가'}]
 };
 
-// 상세 데이터 저장소
 let detailStorage = { dept: {}, patient: {}, type: {} };
 
 function init() {
@@ -433,7 +432,7 @@ function parseToDateString(dStr) {
   return '';
 }
 
-// 상세 팝업 함수
+// [수정된 함수] 상세 팝업창에 상세 내용을 정교하게 출력합니다.
 function showDetail(category, key) {
   const data = detailStorage[category][key];
   if (!data) return;
