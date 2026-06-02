@@ -112,7 +112,7 @@
     <div id="stats-result-container" style="display:none;">
       <div class="stats-section-title">병동별 사용 통계</div>
       <div class="stats-data-list" id="stats-dept-list"></div>
-      <div class="stats-section-title">환자별 사용 통계</div>
+      <div class="stats-section-title">환자별 사용 통계 (클릭 시 상세 조회)</div>
       <div class="stats-data-list" id="stats-patient-list"></div>
       <div class="stats-section-title">기저귀 종류별 통계</div>
       <div class="stats-data-list" id="stats-type-list"></div>
@@ -232,7 +232,6 @@
 <script>
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuo-UYQr3NmHJuGY2v-w4KcOObRfv2YX9Xs6CY9CQDxqhB2cOW_MxtuFToY8fu_CEN/exec";
 let fullRawData = [];
-let detailStorage = { dept: {}, patient: {}, type: {} };
 const state = { currentScreen: 1, totalScreens: 7, data: { date: '', time: '', dept: '', staffType: '', staffName: '', patientName: '', patientId: '', roomNo: '', diaperCat: '', diaperType: '', qty: 1 } };
 const diaperTypes = { '팬티형기저귀': [{name:'서림 중형'}, {name:'서림 대형'}, {name:'서림 특대'}, {name:'테나 중형'}, {name:'라이프리 중형'}, {name:'디펜드 중형'}, {name:'자가'}], '겉기저귀': [{name:'포인트 대형'}, {name:'이지스 중형'}, {name:'자가'}], '속기저귀': [{name:'포인트 일자형'}, {name:'자가'}], '위생깔개매트': [{name:'포인트 깔개매트'}, {name:'자가'}] };
 
@@ -295,23 +294,30 @@ function parseToDateString(dStr) {
   try { const d = new Date(dStr); if(!isNaN(d.getTime())) { const pad = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; } } catch(e){} return '';
 }
 
-// [수정된 통합 상세 조회 함수]
+// [수정된 상세 조회 - 필터링 제거 및 상세 집계]
 function showDetail(filterCategory, filterValue) {
-    const filtered = fullRawData.filter(item => item[filterCategory] === filterValue);
-    let stats = { dept: {}, patient: {}, type: {} };
-    filtered.forEach(row => {
-        const pKey = `${row.patientName || '미지정'}(${row.patientId || '0'} / ${row.roomNo || '0'}호)`;
-        const tKey = `${row.diaperCat || '기타'} - ${row.diaperType || '기타'}`;
-        const dKey = row.dept || '미지정';
-        const q = parseInt(row.qty) || 0;
-        if (filterCategory !== 'dept') stats.dept[dKey] = (stats.dept[dKey] || 0) + q;
-        if (filterCategory !== 'patientName') stats.patient[pKey] = (stats.patient[pKey] || 0) + q;
-        if (filterCategory !== 'diaperType') stats.type[tKey] = (stats.type[tKey] || 0) + q;
+    const filtered = fullRawData.filter(item => {
+        if(filterCategory === 'dept') return item.dept === filterValue;
+        if(filterCategory === 'patientName') return `${item.patientName || '미지정'}(${item.patientId || '0'} / ${item.roomNo || '0'}호)` === filterValue;
+        if(filterCategory === 'diaperType') return `${item.diaperCat || '기타'} - ${item.diaperType || '기타'}` === filterValue;
+        return false;
     });
-    let msg = `[${filterValue}] 상세 통계\n\n`;
-    if (filterCategory !== 'dept') { msg += "【병동별 사용 통계】\n"; for (let k in stats.dept) msg += `${k}: ${stats.dept[k]}개\n`; msg += "\n"; }
-    if (filterCategory !== 'patientName') { msg += "【환자별 사용 통계】\n"; for (let k in stats.patient) msg += `${k}: ${stats.patient[k]}개\n`; msg += "\n"; }
-    if (filterCategory !== 'diaperType') { msg += "【기저귀 종류별 통계】\n"; for (let k in stats.type) msg += `${k}: ${stats.type[k]}개\n`; }
+
+    let details = { patients: {}, types: {}, depts: {} };
+    filtered.forEach(r => {
+        const pKey = `${r.patientName || '미지정'}(${r.patientId || '0'} / ${r.roomNo || '0'}호)`;
+        const tKey = `${r.diaperCat || '기타'} - ${r.diaperType || '기타'}`;
+        const dKey = r.dept || '미지정';
+        const q = parseInt(r.qty) || 0;
+        details.patients[pKey] = (details.patients[pKey] || 0) + q;
+        details.types[tKey] = (details.types[tKey] || 0) + q;
+        details.depts[dKey] = (details.depts[dKey] || 0) + q;
+    });
+
+    let msg = `[${filterValue}] 상세 내역\n\n`;
+    if(filterCategory !== 'dept') { msg += "【병동별】\n"; for(let k in details.depts) msg += `${k}: ${details.depts[k]}개\n`; msg += "\n"; }
+    if(filterCategory !== 'patientName') { msg += "【환자별】\n"; for(let k in details.patients) msg += `${k}: ${details.patients[k]}개\n`; msg += "\n"; }
+    if(filterCategory !== 'diaperType') { msg += "【종류별】\n"; for(let k in details.types) msg += `${k}: ${details.types[k]}개\n`; }
     alert(msg);
 }
 
@@ -327,16 +333,15 @@ function loadStatistics() {
       document.getElementById('stats-loading-msg').style.display = 'none'; document.getElementById('stats-result-container').style.display = 'block';
       const sumDept = {}, sumPatient = {}, sumType = {};
       rows.forEach(item => {
-        let normalizedDateStr = parseToDateString(item.date); if (!normalizedDateStr && item.date) normalizedDateStr = String(item.date).split('T')[0];
-        if (!normalizedDateStr) return;
-        let itemDate = new Date(normalizedDateStr + 'T12:00:00');
+        let nDate = parseToDateString(item.date) || String(item.date).split('T')[0];
+        let itemDate = new Date(nDate + 'T12:00:00');
         if (itemDate >= startDate && itemDate <= endDate) {
-          const qty = parseInt(item.qty) || 0; const catName = (item.diaperCat || "기타").trim();
-          const typeName = `${catName} - ${item.diaperType ? item.diaperType.trim() : '기타'}`;
+          const qty = parseInt(item.qty) || 0;
           const pKey = `${item.patientName || '미지정'}(${item.patientId || '0'} / ${item.roomNo || '0'}호)`;
+          const tKey = `${item.diaperCat || '기타'} - ${item.diaperType || '기타'}`;
           if(item.dept) sumDept[item.dept] = (sumDept[item.dept] || 0) + qty;
-          if(item.patientName) sumPatient[pKey] = (sumPatient[pKey] || 0) + qty;
-          sumType[typeName] = (sumType[typeName] || 0) + qty;
+          sumPatient[pKey] = (sumPatient[pKey] || 0) + qty;
+          sumType[tKey] = (sumType[tKey] || 0) + qty;
         }
       });
       const render = (targetId, dataObj, catType) => {
