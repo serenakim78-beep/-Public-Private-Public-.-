@@ -493,7 +493,6 @@ function loadStatistics() {
           const formattedType = item.diaperType ? `${catName} - ${item.diaperType.trim()}` : "";
 
           if(item.patientName) {
-            // 변수 누락 및 예외 방지를 위해 빈 값 방어 코드 처리 적용
             const pId = item.patientId ? String(item.patientId).trim() : '미지정';
             const rNo = item.roomNo ? String(item.roomNo).trim() : '';
             const roomString = rNo ? (rNo.includes('호') ? rNo : rNo + '호') : '미지정';
