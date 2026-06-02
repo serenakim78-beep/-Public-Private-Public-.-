@@ -23,61 +23,17 @@
   .header-tabs { display: flex; gap: 4px; margin-top: 4px; }
   .nav-tab-btn { flex: 1; background: rgba(255, 255, 255, 0.15); border: none; color: rgba(255, 255, 255, 0.7); padding: 10px; font-size: 14px; font-weight: 600; font-family: 'Noto Sans KR', sans-serif; border-radius: 8px 8px 0 0; cursor: pointer; transition: all 0.2s; text-align: center; }
   .nav-tab-btn.active { background: var(--surface); color: var(--primary); }
-  .step-progress { background: var(--surface2); padding: 12px 20px; border-bottom: 1px solid var(--border); }
-  .progress-track { background: var(--border); border-radius: 100px; height: 4px; width: 100%; overflow: hidden; }
-  .progress-fill { background: var(--primary); height: 100%; border-radius: 100px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-  .step-label { color: var(--text2); font-size: 11px; margin-top: 6px; font-weight: 600; }
-  .screen { display: none; flex-direction: column; flex: 1; padding: 24px 20px 100px; animation: slideUp 0.32s cubic-bezier(0.4,0,0.2,1); }
+  .screen { display: none; flex-direction: column; flex: 1; padding: 24px 20px 100px; }
   .screen.active { display: flex; }
-  @keyframes slideUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
   .screen-title { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; margin-bottom: 4px; }
   .screen-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
-  .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px; }
-  .option-grid.single { grid-template-columns: 1fr; }
-  .option-card { border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 14px 10px; text-align: center; cursor: pointer; transition: all 0.18s; background: var(--surface2); position: relative; overflow: hidden; }
-  .option-card:active { transform: scale(0.97); }
-  .option-card.selected { border-color: var(--primary); background: var(--primary-light); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
-  .option-card .card-name { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
-  .option-card.selected .card-name { color: var(--primary); }
-  .input-wrap { margin-bottom: 16px; }
-  .input-label { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; display: block; }
-  .text-input { width: 100%; border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; font-size: 15px; font-family: 'Noto Sans KR', sans-serif; color: var(--text); background: var(--surface2); outline: none; transition: border-color 0.18s, box-shadow 0.18s; }
-  .text-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.10); }
-  .qty-wrap { display: flex; align-items: center; gap: 0; border: 2px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface2); }
-  .qty-btn { width: 56px; height: 60px; border: none; background: transparent; font-size: 24px; font-weight: 300; color: var(--primary); cursor: pointer; }
-  .qty-display { flex: 1; text-align: center; font-size: 28px; font-weight: 700; color: var(--text); border: none; background: transparent; outline: none; }
-  .qty-presets-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 14px; margin-bottom: 8px; }
-  .qty-preset-btn { border: 2px solid var(--border); border-radius: 8px; padding: 12px 0; text-align: center; font-size: 15px; font-weight: 700; color: var(--text2); background: var(--surface2); cursor: pointer; transition: all 0.15s; }
-  .qty-preset-btn.selected { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
-  .datetime-card { background: var(--primary); border-radius: var(--radius); padding: 20px; color: white; margin-bottom: 20px; }
-  .dt-date { font-size: 15px; opacity: 0.85; font-weight: 500; margin-bottom: 4px; }
-  .dt-time { font-size: 38px; font-weight: 700; letter-spacing: -1px; }
-  .dt-edit { margin-top: 12px; display: flex; gap: 8px; }
-  .dt-edit input { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; color: white; padding: 14px 12px; font-size: 15px; outline: none; flex: 1; }
-  .dt-edit input::-webkit-calendar-picker-indicator { filter: invert(1); }
-  .info-card { background: var(--surface2); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
-  .info-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
-  .info-row:last-child { border-bottom: none; }
-  .info-key { font-size: 13px; color: var(--text2); font-weight: 500; }
-  .info-val { font-size: 13px; color: var(--text); font-weight: 600; }
-  .bottom-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; padding: 12px 20px 24px; background: white; border-top: 1px solid var(--border); display: flex; gap: 10px; z-index: 200; }
-  .btn-back { border: 2px solid var(--border); background: white; border-radius: var(--radius-sm); padding: 14px 20px; font-size: 15px; font-weight: 600; color: var(--text2); cursor: pointer; }
-  .btn-next { flex: 1; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(37,99,235,0.28); }
-  .btn-next:disabled { background: var(--border); color: var(--text3); box-shadow: none; cursor: not-allowed; }
-  .success-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; padding: 40px 20px; }
-  .success-icon { width: 80px; height: 80px; background: var(--accent-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-  .success-icon svg { color: var(--accent); }
-  .success-title { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-  .success-sub { font-size: 14px; color: var(--text2); line-height: 1.7; }
-  .success-actions { display: flex; gap: 10px; width: 100%; margin-top: 8px; }
-  .btn-primary-solid { flex: 1; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer; }
   .stats-filter-card { background: var(--surface2); border: 2px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
   .stats-date-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
   .stats-date-row input { flex: 1; border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 14px; outline: none; font-family: inherit; text-align: center; background: white; }
   .btn-stats-search { width: 100%; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
   .stats-section-title { font-size: 16px; font-weight: 700; color: var(--text); margin: 20px 0 10px; padding-left: 4px; border-left: 4px solid var(--primary); }
   .stats-data-list { display: flex; flex-direction: column; gap: 8px; }
-  .stats-data-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 16px; border: 1px solid var(--border); }
+  .stats-data-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 16px; border: 1px solid var(--border); cursor: pointer; }
   .stats-data-name { font-size: 14px; font-weight: 600; color: var(--text); }
   .stats-data-count { font-size: 15px; font-weight: 700; color: var(--primary); }
   .stats-empty-msg { text-align: center; color: var(--text3); font-size: 13px; padding: 30px 0; }
@@ -93,12 +49,11 @@
       </div>
     </div>
     <div class="header-tabs">
-      <button class="nav-tab-btn active" id="tab-record" onclick="switchMainTab('record')">기저귀 기록</button>
-      <button class="nav-tab-btn" id="tab-stats" onclick="switchMainTab('stats')">통계 확인</button>
+      <button class="nav-tab-btn active" id="tab-stats">통계 확인</button>
     </div>
   </div>
 
-  <div id="main-stats-area" style="display: none; flex-direction: column; flex: 1; padding: 24px 20px 100px; overflow-y: auto;">
+  <div id="main-stats-area" class="screen active">
     <div class="screen-title">사용 통계 조회</div>
     <div class="screen-sub">지정된 날짜 범위 내의 사용량을 실시간으로 집계합니다.</div>
     <div class="stats-filter-card">
@@ -112,7 +67,7 @@
     <div id="stats-result-container" style="display:none;">
       <div class="stats-section-title">병동별 사용 통계</div>
       <div class="stats-data-list" id="stats-dept-list"></div>
-      <div class="stats-section-title">환자별 사용 통계 (클릭 시 상세 조회)</div>
+      <div class="stats-section-title">환자별 사용 통계</div>
       <div class="stats-data-list" id="stats-patient-list"></div>
       <div class="stats-section-title">기저귀 종류별 통계</div>
       <div class="stats-data-list" id="stats-type-list"></div>
@@ -120,245 +75,93 @@
     <div id="stats-loading-msg" class="stats-empty-msg" style="display:none; font-weight: 600; color: var(--primary);">데이터 불러오는 중...</div>
     <div id="stats-initial-msg" class="stats-empty-msg">날짜를 설정하고 조회하기 버튼을 눌러주세요.</div>
   </div>
-
-  <div id="main-record-area" style="display: flex; flex-direction: column; flex: 1;">
-    <div class="step-progress" id="stepProgress">
-      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:14%"></div></div>
-      <div class="step-label" id="stepLabel">1단계 / 7단계</div>
-    </div>
-    <div class="screen active" id="screen1">
-      <div class="screen-title">사용 환자</div>
-      <div class="screen-sub">환자의 정보를 모두 입력해 주세요.</div>
-      <div class="input-wrap">
-        <span class="input-label">환자 이름</span>
-        <input type="text" class="text-input" id="patientName" placeholder="홍길동" oninput="validateCurrentScreen();" style="font-size:20px;font-weight:700;">
-      </div>
-      <div class="input-wrap">
-        <span class="input-label">환자 번호</span>
-        <input type="text" class="text-input" id="patientId" placeholder="예: 12345" oninput="validateCurrentScreen();">
-      </div>
-      <div class="input-wrap">
-        <span class="input-label">병실</span>
-        <input type="text" class="text-input" id="roomNo" placeholder="예: 301" oninput="validateCurrentScreen();">
-      </div>
-    </div>
-    <div class="screen" id="screen2">
-      <div class="screen-title">기저귀 구분</div>
-      <div class="screen-sub">사용한 기저귀 종류를 선택해 주세요.</div>
-      <div class="option-grid single">
-        <div class="option-card" onclick="selectDiaperCat(this,'팬티형기저귀')"><div class="card-name">팬티형 기저귀</div></div>
-        <div class="option-card" onclick="selectDiaperCat(this,'겉기저귀')"><div class="card-name">겉 기저귀</div></div>
-        <div class="option-card" onclick="selectDiaperCat(this,'속기저귀')"><div class="card-name">속 기저귀</div></div>
-        <div class="option-card" onclick="selectDiaperCat(this,'위생깔개매트')"><div class="card-name">위생 깔개 매트</div></div>
-      </div>
-    </div>
-    <div class="screen" id="screen3">
-      <div class="screen-title">기저귀 종류</div>
-      <div class="screen-sub">세부 종류를 선택해 주세요.</div>
-      <div class="option-grid single" id="diaperTypeGrid"></div>
-    </div>
-    <div class="screen" id="screen4">
-      <div class="screen-title">사용 갯수</div>
-      <div class="screen-sub">사용한 수량을 입력해 주세요.</div>
-      <div class="qty-wrap">
-        <button class="qty-btn" onclick="changeQty(-1)">-</button>
-        <input type="number" class="qty-display" id="qtyDisplay" value="1" min="1" oninput="validateCurrentScreen()">
-        <button class="qty-btn" onclick="changeQty(1)">+</button>
-      </div>
-      <div class="qty-presets-grid">
-        <button class="qty-preset-btn selected" onclick="setPresetQty(1, this)">1개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(2, this)">2개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(3, this)">3개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(4, this)">4개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(5, this)">5개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(6, this)">6개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(7, this)">7개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(8, this)">8개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(9, this)">9개</button>
-        <button class="qty-preset-btn" onclick="setPresetQty(10, this)">10개</button>
-      </div>
-      <div class="info-card" style="margin-top:16px;">
-        <div class="info-row"><span class="info-key">환자 이름</span><span class="info-val" id="rev-patient">-</span></div>
-        <div class="info-row"><span class="info-key">기저귀 종류</span><span class="info-val" id="rev-diaper">-</span></div>
-      </div>
-    </div>
-    <div class="screen" id="screen5">
-      <div class="screen-title">날짜 및 시간</div>
-      <div class="datetime-card">
-        <div class="dt-date" id="dtDateDisp"></div>
-        <div class="dt-time" id="dtTimeDisp"></div>
-        <div class="dt-edit">
-          <input type="date" id="dtDate">
-          <input type="time" id="dtTime">
-        </div>
-      </div>
-    </div>
-    <div class="screen" id="screen6">
-      <div class="screen-title">사용 부서 선택</div>
-      <div class="option-grid">
-        <div class="option-card" onclick="selectOption('dept','2A병동', this)">2A병동</div>
-        <div class="option-card" onclick="selectOption('dept','2B병동', this)">2B병동</div>
-        <div class="option-card" onclick="selectOption('dept','3A병동', this)">3A병동</div>
-        <div class="option-card" onclick="selectOption('dept','3B병동', this)">3B병동</div>
-        <div class="option-card" onclick="selectOption('dept','5병동', this)">5병동</div>
-      </div>
-    </div>
-    <div class="screen" id="screen7">
-      <div class="screen-title">입력 직원 정보</div>
-      <div class="option-grid single" style="margin-bottom: 15px;">
-        <div class="option-card" onclick="selectOption('staffType','간호사', this)">간호사/직원</div>
-        <div class="option-card" onclick="selectOption('staffType','간병사', this)">간병사</div>
-      </div>
-      <div class="input-wrap">
-        <span class="input-label">직원 이름</span>
-        <input type="text" class="text-input" id="staffName" placeholder="이름을 입력하세요" oninput="validateCurrentScreen();">
-      </div>
-    </div>
-    <div class="screen" id="screen8">
-      <div class="success-wrap">
-        <div class="success-icon"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><polyline points="8,20 16,28 32,12" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="success-title" id="saveStatusTitle">엑셀 저장 중...</div>
-        <div class="success-sub" id="saveStatusSub">잠시만 기다려주세요.</div>
-        <div class="success-actions" id="successActions" style="display:none;"><button class="btn-primary-solid" onclick="resetForm()">새로 입력하기</button></div>
-      </div>
-    </div>
-    <div class="bottom-bar" id="bottomBar">
-      <button class="btn-back" id="btnBack" onclick="goBack()">이전</button>
-      <button class="btn-next" id="btnNext" onclick="goNext()">다음</button>
-    </div>
-  </div>
 </div>
 
 <script>
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuo-UYQr3NmHJuGY2v-w4KcOObRfv2YX9Xs6CY9CQDxqhB2cOW_MxtuFToY8fu_CEN/exec";
 let fullRawData = [];
-const state = { currentScreen: 1, totalScreens: 7, data: { date: '', time: '', dept: '', staffType: '', staffName: '', patientName: '', patientId: '', roomNo: '', diaperCat: '', diaperType: '', qty: 1 } };
-const diaperTypes = { '팬티형기저귀': [{name:'서림 중형'}, {name:'서림 대형'}, {name:'서림 특대'}, {name:'테나 중형'}, {name:'라이프리 중형'}, {name:'디펜드 중형'}, {name:'자가'}], '겉기저귀': [{name:'포인트 대형'}, {name:'이지스 중형'}, {name:'자가'}], '속기저귀': [{name:'포인트 일자형'}, {name:'자가'}], '위생깔개매트': [{name:'포인트 깔개매트'}, {name:'자가'}] };
 
-function init() {
-  const now = new Date(); const pad = (n) => String(n).padStart(2, '0');
-  state.data.date = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-  state.data.time = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  document.getElementById('dtDate').value = state.data.date; document.getElementById('dtTime').value = state.data.time;
-  document.getElementById('statsStartDate').value = state.data.date; document.getElementById('statsEndDate').value = state.data.date;
-  updateDateDisplay(); validateCurrentScreen();
-}
-function updateDateDisplay() { document.getElementById('dtDateDisp').textContent = state.data.date; document.getElementById('dtTimeDisp').textContent = state.data.time; }
-document.getElementById('dtDate').addEventListener('input', function() { state.data.date = this.value; updateDateDisplay(); });
-document.getElementById('dtTime').addEventListener('input', function() { state.data.time = this.value; updateDateDisplay(); });
-function switchMainTab(tab) {
-  const btnRecord = document.getElementById('tab-record'), btnStats = document.getElementById('tab-stats'), areaRecord = document.getElementById('main-record-area'), areaStats = document.getElementById('main-stats-area');
-  if (tab === 'record') { btnRecord.classList.add('active'); btnStats.classList.remove('active'); areaRecord.style.display = 'flex'; areaStats.style.display = 'none'; } 
-  else { btnRecord.classList.remove('active'); btnStats.classList.add('active'); areaRecord.style.display = 'none'; areaStats.style.display = 'flex'; loadStatistics(); }
-}
-function goTo(screenNum) {
-  for (let i = 1; i <= 8; i++) document.getElementById('screen' + i).classList.remove('active');
-  document.getElementById('screen' + screenNum).classList.add('active');
-  state.currentScreen = screenNum;
-  const sp = document.getElementById('stepProgress'), bb = document.getElementById('bottomBar');
-  if (screenNum === 8) { sp.style.display = 'none'; bb.style.display = 'none'; saveDataToGoogle(); } 
-  else { sp.style.display = ''; bb.style.display = ''; document.getElementById('progressFill').style.width = Math.round((screenNum / state.totalScreens) * 100) + '%'; document.getElementById('stepLabel').textContent = screenNum + "단계 / 7단계"; }
-  validateCurrentScreen();
-}
-function goNext() { if(state.currentScreen < 8) goTo(state.currentScreen + 1); }
-function goBack() { if(state.currentScreen > 1) goTo(state.currentScreen - 1); }
-function validateCurrentScreen() {
-  let isValid = false;
-  if (state.currentScreen === 1) isValid = document.getElementById('patientName').value.trim() && document.getElementById('patientId').value.trim() && document.getElementById('roomNo').value.trim();
-  else if (state.currentScreen === 2) isValid = state.data.diaperCat;
-  else if (state.currentScreen === 3) isValid = state.data.diaperType;
-  else if (state.currentScreen === 4) { state.data.qty = parseInt(document.getElementById('qtyDisplay').value) || 1; document.getElementById('rev-patient').textContent = document.getElementById('patientName').value; document.getElementById('rev-diaper').textContent = state.data.diaperType; isValid = state.data.qty > 0; }
-  else if (state.currentScreen === 5 || state.currentScreen === 6) isValid = true;
-  else if (state.currentScreen === 7) { isValid = state.data.staffType && document.getElementById('staffName').value.trim(); state.data.staffName = document.getElementById('staffName').value.trim(); }
-  document.getElementById('btnNext').disabled = !isValid;
-}
-function selectDiaperCat(el, cat) {
-  state.data.diaperCat = cat; state.data.diaperType = ''; const cards = el.parentElement.querySelectorAll('.option-card'); cards.forEach(c => c.classList.remove('selected')); el.classList.add('selected');
-  const grid = document.getElementById('diaperTypeGrid'); grid.innerHTML = '';
-  diaperTypes[cat].forEach(t => { const div = document.createElement('div'); div.className = 'option-card'; div.innerHTML = `<div class="card-name">${t.name}</div>`; div.onclick = function() { state.data.diaperType = t.name; grid.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected')); div.classList.add('selected'); validateCurrentScreen(); }; grid.appendChild(div); });
-  validateCurrentScreen();
-}
-function selectOption(field, val, el) { state.data[field] = val; const cards = el.parentElement.querySelectorAll('.option-card'); cards.forEach(c => c.classList.remove('selected')); el.classList.add('selected'); validateCurrentScreen(); }
-function changeQty(n) { const disp = document.getElementById('qtyDisplay'); let val = (parseInt(disp.value) || 1) + n; if(val < 1) val = 1; disp.value = val; const presetBtns = document.querySelectorAll('.qty-preset-btn'); presetBtns.forEach(btn => btn.classList.remove('selected')); if (val <= 10) presetBtns[val - 1].classList.add('selected'); validateCurrentScreen(); }
-function setPresetQty(num, btnElement) { document.getElementById('qtyDisplay').value = num; const presetBtns = document.querySelectorAll('.qty-preset-btn'); presetBtns.forEach(btn => btn.classList.remove('selected')); btnElement.classList.add('selected'); validateCurrentScreen(); }
-function saveDataToGoogle() {
-  state.data.patientName = document.getElementById('patientName').value.trim(); state.data.patientId = document.getElementById('patientId').value.trim(); state.data.roomNo = document.getElementById('roomNo').value.trim();
-  const searchParams = new URLSearchParams(); for (const key in state.data) searchParams.append(key, state.data[key]);
-  fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: searchParams.toString() })
-  .then(() => { document.getElementById('saveStatusTitle').textContent = "저장 완료!"; document.getElementById('saveStatusSub').textContent = "스프레드시트에 실시간 기록되었습니다."; document.getElementById('successActions').style.display = 'flex'; })
-  .catch(() => { document.getElementById('saveStatusTitle').textContent = "확인 필요"; document.getElementById('saveStatusSub').textContent = "전송 과정에 문제가 발생했습니다."; document.getElementById('successActions').style.display = 'flex'; });
-}
-function parseToDateString(dStr) {
-  if (!dStr) return ''; let clean = String(dStr).replace(/[^0-9]/g, '');
-  if (clean.length === 8) return `${clean.substring(0,4)}-${clean.substring(4,6)}-${clean.substring(6,8)}`;
-  try { const d = new Date(dStr); if(!isNaN(d.getTime())) { const pad = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; } } catch(e){} return '';
-}
-
-// [수정된 상세 조회 - 필터링 제거 및 상세 집계]
-function showDetail(filterCategory, filterValue) {
+function showDetail(type, value) {
     const filtered = fullRawData.filter(item => {
-        if(filterCategory === 'dept') return item.dept === filterValue;
-        if(filterCategory === 'patientName') return `${item.patientName || '미지정'}(${item.patientId || '0'} / ${item.roomNo || '0'}호)` === filterValue;
-        if(filterCategory === 'diaperType') return `${item.diaperCat || '기타'} - ${item.diaperType || '기타'}` === filterValue;
+        if (type === 'dept') return item.dept === value;
+        if (type === 'patientName') return `${item.patientName || '미지정'}(${item.patientId || '0'} / ${item.roomNo || '0'}호)` === value;
+        if (type === 'diaperType') return `${item.diaperCat || '기타'} - ${item.diaperType || '기타'}` === value;
         return false;
     });
 
-    let details = { patients: {}, types: {}, depts: {} };
-    filtered.forEach(r => {
-        const pKey = `${r.patientName || '미지정'}(${r.patientId || '0'} / ${r.roomNo || '0'}호)`;
-        const tKey = `${r.diaperCat || '기타'} - ${r.diaperType || '기타'}`;
-        const dKey = r.dept || '미지정';
-        const q = parseInt(r.qty) || 0;
-        details.patients[pKey] = (details.patients[pKey] || 0) + q;
-        details.types[tKey] = (details.types[tKey] || 0) + q;
-        details.depts[dKey] = (details.depts[dKey] || 0) + q;
-    });
+    if (filtered.length === 0) { alert("상세 내역이 없습니다."); return; }
 
-    let msg = `[${filterValue}] 상세 내역\n\n`;
-    if(filterCategory !== 'dept') { msg += "【병동별】\n"; for(let k in details.depts) msg += `${k}: ${details.depts[k]}개\n`; msg += "\n"; }
-    if(filterCategory !== 'patientName') { msg += "【환자별】\n"; for(let k in details.patients) msg += `${k}: ${details.patients[k]}개\n`; msg += "\n"; }
-    if(filterCategory !== 'diaperType') { msg += "【종류별】\n"; for(let k in details.types) msg += `${k}: ${details.types[k]}개\n`; }
+    let msg = `[${value}] 상세 내역\n\n`;
+    filtered.forEach((r, i) => {
+        msg += `${i+1}. ${r.date?.split('T')[0]} | ${r.dept} | ${r.patientName} | ${r.diaperType} | ${r.qty}개\n`;
+    });
     alert(msg);
 }
 
 function loadStatistics() {
-  const startInput = document.getElementById('statsStartDate').value, endInput = document.getElementById('statsEndDate').value;
-  if(!startInput || !endInput) { alert("날짜를 지정해 주세요."); return; }
-  const startDate = new Date(startInput + 'T00:00:00'), endDate = new Date(endInput + 'T23:59:59');
-  document.getElementById('stats-initial-msg').style.display = 'none'; document.getElementById('stats-loading-msg').style.display = 'block'; document.getElementById('stats-result-container').style.display = 'none';
-  fetch(GOOGLE_SCRIPT_URL)
-    .then(res => res.json())
-    .then(rows => {
-      fullRawData = rows;
-      document.getElementById('stats-loading-msg').style.display = 'none'; document.getElementById('stats-result-container').style.display = 'block';
-      const sumDept = {}, sumPatient = {}, sumType = {};
-      rows.forEach(item => {
-        let nDate = parseToDateString(item.date) || String(item.date).split('T')[0];
-        let itemDate = new Date(nDate + 'T12:00:00');
-        if (itemDate >= startDate && itemDate <= endDate) {
-          const qty = parseInt(item.qty) || 0;
-          const pKey = `${item.patientName || '미지정'}(${item.patientId || '0'} / ${item.roomNo || '0'}호)`;
-          const tKey = `${item.diaperCat || '기타'} - ${item.diaperType || '기타'}`;
-          if(item.dept) sumDept[item.dept] = (sumDept[item.dept] || 0) + qty;
-          sumPatient[pKey] = (sumPatient[pKey] || 0) + qty;
-          sumType[tKey] = (sumType[tKey] || 0) + qty;
-        }
-      });
-      const render = (targetId, dataObj, catType) => {
-        const wrapper = document.getElementById(targetId); wrapper.innerHTML = '';
-        Object.keys(dataObj).sort((a,b) => dataObj[b] - dataObj[a]).forEach(k => {
-          const row = document.createElement('div'); row.className = 'stats-data-row'; row.style.cursor = 'pointer';
-          row.onclick = () => showDetail(catType, k);
-          row.innerHTML = `<span class="stats-data-name">${k}</span><span class="stats-data-count">${dataObj[k]}개</span>`;
-          wrapper.appendChild(row);
+    const startVal = document.getElementById('statsStartDate').value;
+    const endVal = document.getElementById('statsEndDate').value;
+    
+    if(!startVal || !endVal) { alert("날짜를 모두 선택하세요."); return; }
+    
+    const start = new Date(startVal);
+    const end = new Date(endVal);
+    end.setHours(23, 59, 59, 999); // 종료일의 마지막 시간까지 포함
+
+    if(start > end) { alert("종료일이 시작일보다 빠를 수 없습니다."); return; }
+    
+    document.getElementById('stats-loading-msg').style.display = 'block';
+    document.getElementById('stats-initial-msg').style.display = 'none';
+    document.getElementById('stats-result-container').style.display = 'none';
+
+    fetch(GOOGLE_SCRIPT_URL)
+        .then(res => res.json())
+        .then(rows => {
+            // [날짜 필터링 로직 적용]
+            fullRawData = rows.filter(r => {
+                const d = new Date(r.date);
+                return d >= start && d <= end;
+            });
+
+            document.getElementById('stats-loading-msg').style.display = 'none';
+            document.getElementById('stats-result-container').style.display = 'block';
+            
+            const deptMap = {}, patMap = {}, typeMap = {};
+            
+            fullRawData.forEach(r => {
+                const q = parseInt(r.qty) || 0;
+                const pKey = `${r.patientName || '미지정'}(${r.patientId || '0'} / ${r.roomNo || '0'}호)`;
+                const tKey = `${r.diaperCat || '기타'} - ${r.diaperType || '기타'}`;
+                
+                if(r.dept) deptMap[r.dept] = (deptMap[r.dept] || 0) + q;
+                patMap[pKey] = (patMap[pKey] || 0) + q;
+                typeMap[tKey] = (typeMap[tKey] || 0) + q;
+            });
+            
+            renderList('stats-dept-list', deptMap, 'dept');
+            renderList('stats-patient-list', patMap, 'patientName');
+            renderList('stats-type-list', typeMap, 'diaperType');
+        })
+        .catch(err => {
+            document.getElementById('stats-loading-msg').style.display = 'none';
+            alert("데이터를 불러오는 중 오류가 발생했습니다.");
         });
-      };
-      render('stats-dept-list', sumDept, 'dept'); render('stats-patient-list', sumPatient, 'patientName'); render('stats-type-list', sumType, 'diaperType');
-    })
-    .catch(() => { document.getElementById('stats-loading-msg').style.display = 'none'; document.getElementById('stats-initial-msg').style.display = 'block'; document.getElementById('stats-initial-msg').textContent = "데이터를 불러올 수 없습니다."; });
 }
-function resetForm() { document.getElementById('patientName').value = ''; document.getElementById('patientId').value = ''; document.getElementById('roomNo').value = ''; document.getElementById('staffName').value = ''; document.getElementById('qtyDisplay').value = 1; state.data = { date: '', time: '', dept: '', staffType: '', staffName: '', patientName: '', patientId: '', roomNo: '', diaperCat: '', diaperType: '', qty: 1 }; document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected')); const presetBtns = document.querySelectorAll('.qty-preset-btn'); presetBtns.forEach(btn => btn.classList.remove('selected')); presetBtns[0].classList.add('selected'); init(); goTo(1); }
-window.onload = init;
+
+function renderList(id, map, type) {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    const keys = Object.keys(map);
+    if(keys.length === 0) { el.innerHTML = '<div class="stats-empty-msg">데이터가 없습니다.</div>'; return; }
+    
+    keys.forEach(key => {
+        const div = document.createElement('div');
+        div.className = 'stats-data-row';
+        div.innerHTML = `<span class="stats-data-name">${key}</span><span class="stats-data-count">${map[key]}개</span>`;
+        div.onclick = () => showDetail(type, key);
+        el.appendChild(div);
+    });
+}
 </script>
 </body>
 </html>
