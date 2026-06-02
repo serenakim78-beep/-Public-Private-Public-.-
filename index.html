@@ -110,11 +110,11 @@
       <button class="btn-stats-search" onclick="loadStatistics()">조회하기</button>
     </div>
     <div id="stats-result-container" style="display:none;">
-      <div class="stats-section-title">병동별 사용 통계</div>
+      <div class="stats-section-title">병동별 사용 통계 (클릭 시 상세)</div>
       <div class="stats-data-list" id="stats-dept-list"></div>
-      <div class="stats-section-title">환자별 사용 통계 (클릭 시 상세 조회)</div>
+      <div class="stats-section-title">환자별 사용 통계 (클릭 시 상세)</div>
       <div class="stats-data-list" id="stats-patient-list"></div>
-      <div class="stats-section-title">기저귀 종류별 통계</div>
+      <div class="stats-section-title">기저귀 종류별 통계 (클릭 시 상세)</div>
       <div class="stats-data-list" id="stats-type-list"></div>
     </div>
     <div id="stats-loading-msg" class="stats-empty-msg" style="display:none; font-weight: 600; color: var(--primary);">구글 스프레드시트 데이터 불러오는 중...</div>
@@ -245,7 +245,6 @@
 </div>
 
 <script>
-// ⚠️ 주의: 아래 큰따옴표 안에 새로 배포한 구글 웹 앱 URL 주소를 정확하게 넣어주세요!
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuo-UYQr3NmHJuGY2v-w4KcOObRfv2YX9Xs6CY9CQDxqhB2cOW_MxtuFToY8fu_CEN/exec";
 
 const state = {
@@ -260,7 +259,8 @@ const diaperTypes = {
   '위생깔개매트': [{name:'포인트 깔개매트'}, {name:'자가'}]
 };
 
-let globalPatientDetails = {};
+// 상세 데이터 저장소
+let detailStorage = { dept: {}, patient: {}, type: {} };
 
 function init() {
   const now = new Date();
@@ -412,7 +412,7 @@ function saveDataToGoogle() {
   })
   .catch(err => {
     document.getElementById('saveStatusTitle').textContent = "확인 필요";
-    document.getElementById('saveStatusSub').textContent = "전송 과정에 문제가 발생했습니다. 네트워크를 확인해 주세요.";
+    document.getElementById('saveStatusSub').textContent = "전송 과정에 문제가 발생했습니다.";
     document.getElementById('successActions').style.display = 'flex';
   });
 }
@@ -433,20 +433,14 @@ function parseToDateString(dStr) {
   return '';
 }
 
-function showPatientDiaperDetails(patientKey) {
-  const details = globalPatientDetails[patientKey];
-  if (!details) {
-    alert(`${patientKey} 환자의 세부 기저귀 사용 정보가 없습니다.`);
-    return;
+// 상세 팝업 함수
+function showDetail(category, key) {
+  const data = detailStorage[category][key];
+  if (!data) return;
+  let msg = `[${key}] 상세 내역\n\n`;
+  for(let item in data) {
+    msg += `${item}: ${data[item]}개\n`;
   }
-  
-  let msg = `[${patientKey}] 기저귀 사용 상세\n\n`;
-  const sortedTypes = Object.keys(details).sort((a, b) => details[b] - details[a]);
-  
-  sortedTypes.forEach(type => {
-    msg += `${type}   ${details[type]}개\n`;
-  });
-  
   alert(msg);
 }
 
@@ -469,78 +463,57 @@ function loadStatistics() {
       document.getElementById('stats-result-container').style.display = 'block';
       
       const sumDept = {}, sumPatient = {}, sumType = {};
-      globalPatientDetails = {};
+      detailStorage = { dept: {}, patient: {}, type: {} };
 
       rows.forEach(item => {
         let normalizedDateStr = parseToDateString(item.date);
-        if (!normalizedDateStr && item.date) {
-          normalizedDateStr = String(item.date).split('T')[0];
-        }
+        if (!normalizedDateStr && item.date) normalizedDateStr = String(item.date).split('T')[0];
         if (!normalizedDateStr) return;
         
         let itemDate = new Date(normalizedDateStr + 'T12:00:00');
         
         if (itemDate >= startDate && itemDate <= endDate) {
           const qty = parseInt(item.qty) || 0;
-          if(item.dept) sumDept[item.dept] = (sumDept[item.dept] || 0) + qty;
-          
-          let catName = (item.diaperCat || "미확인").trim();
-          if(catName === "팬티형기저귀") catName = "팬티형 기저귀";
-          if(catName === "겉기저귀") catName = "겉 기저귀";
-          if(catName === "속기저귀") catName = "속 기저귀";
-          if(catName === "위생깔개매트") catName = "위생 깔개 매트";
-          
-          const formattedType = item.diaperType ? `${catName} - ${item.diaperType.trim()}` : "";
+          let catName = (item.diaperCat || "기타").trim();
+          const typeName = `${catName} - ${item.diaperType ? item.diaperType.trim() : '기타'}`;
+          const pKey = `${item.patientName || '미지정'}(${item.patientId || '0'} / ${item.roomNo || '0'}호)`;
 
+          // 데이터 누적
+          if(item.dept) {
+             sumDept[item.dept] = (sumDept[item.dept] || 0) + qty;
+             if(!detailStorage.dept[item.dept]) detailStorage.dept[item.dept] = {};
+             detailStorage.dept[item.dept][typeName] = (detailStorage.dept[item.dept][typeName] || 0) + qty;
+          }
           if(item.patientName) {
-            // 변수 누락 및 예외 방지를 위해 빈 값 방어 코드 처리 적용
-            const pId = item.patientId ? String(item.patientId).trim() : '미지정';
-            const rNo = item.roomNo ? String(item.roomNo).trim() : '';
-            const roomString = rNo ? (rNo.includes('호') ? rNo : rNo + '호') : '미지정';
-            
-            const pKey = `${String(item.patientName).trim()}(${pId} / ${roomString})`;
-            sumPatient[pKey] = (sumPatient[pKey] || 0) + qty;
-            
-            if(formattedType) {
-              if (!globalPatientDetails[pKey]) {
-                globalPatientDetails[pKey] = {};
-              }
-              globalPatientDetails[pKey][formattedType] = (globalPatientDetails[pKey][formattedType] || 0) + qty;
-            }
+             sumPatient[pKey] = (sumPatient[pKey] || 0) + qty;
+             if(!detailStorage.patient[pKey]) detailStorage.patient[pKey] = {};
+             detailStorage.patient[pKey][typeName] = (detailStorage.patient[pKey][typeName] || 0) + qty;
           }
-          
-          if(formattedType) {
-            sumType[formattedType] = (sumType[formattedType] || 0) + qty;
-          }
+          sumType[typeName] = (sumType[typeName] || 0) + qty;
+          if(!detailStorage.type[typeName]) detailStorage.type[typeName] = {};
+          detailStorage.type[typeName][pKey] = (detailStorage.type[typeName][pKey] || 0) + qty;
         }
       });
 
-      const renderStatsList = (targetId, dataObj, isPatientList = false) => {
+      const render = (targetId, dataObj, catType) => {
         const wrapper = document.getElementById(targetId); wrapper.innerHTML = '';
-        const keys = Object.keys(dataObj);
-        if(keys.length === 0) { wrapper.innerHTML = '<div class="stats-empty-msg">해당 기간 내 데이터가 없습니다.</div>'; return; }
-        
-        keys.sort((a,b) => dataObj[b] - dataObj[a]);
-        
-        keys.forEach(k => {
-          const row = document.createElement('div'); row.className = 'stats-data-row';
-          if (isPatientList) {
-            row.style.cursor = 'pointer';
-            row.onclick = function() { showPatientDiaperDetails(k); };
-          }
+        Object.keys(dataObj).sort((a,b) => dataObj[b] - dataObj[a]).forEach(k => {
+          const row = document.createElement('div'); 
+          row.className = 'stats-data-row'; row.style.cursor = 'pointer';
+          row.onclick = () => showDetail(catType, k);
           row.innerHTML = `<span class="stats-data-name">${k}</span><span class="stats-data-count">${dataObj[k]}개</span>`;
           wrapper.appendChild(row);
         });
       };
 
-      renderStatsList('stats-dept-list', sumDept);
-      renderStatsList('stats-patient-list', sumPatient, true);
-      renderStatsList('stats-type-list', sumType);
+      render('stats-dept-list', sumDept, 'dept');
+      render('stats-patient-list', sumPatient, 'patient');
+      render('stats-type-list', sumType, 'type');
     })
-    .catch(err => {
+    .catch(() => {
       document.getElementById('stats-loading-msg').style.display = 'none';
       document.getElementById('stats-initial-msg').style.display = 'block';
-      document.getElementById('stats-initial-msg').textContent = "연동 주소 설정 오류 또는 서버가 응답하지 않습니다.";
+      document.getElementById('stats-initial-msg').textContent = "데이터를 불러올 수 없습니다.";
     });
 }
 
