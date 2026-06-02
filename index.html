@@ -71,21 +71,31 @@
   .success-sub { font-size: 14px; color: var(--text2); line-height: 1.7; }
   .success-actions { display: flex; gap: 10px; width: 100%; margin-top: 8px; }
   .btn-primary-solid { flex: 1; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  
+  /* 통계 탭 스타일 복구 및 고도화 */
   .stats-filter-card { background: var(--surface2); border: 2px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
   .stats-date-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
   .stats-date-row input { flex: 1; border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-size: 14px; outline: none; font-family: inherit; text-align: center; background: white; }
   .btn-stats-search { width: 100%; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
-  .stats-section-title { font-size: 16px; font-weight: 700; color: var(--text); margin: 20px 0 10px; padding-left: 4px; border-left: 4px solid var(--primary); }
+  .stats-section-title { font-size: 16px; font-weight: 700; color: var(--text); margin: 24px 0 12px; padding-left: 8px; border-left: 4px solid var(--primary); }
   .stats-data-list { display: flex; flex-direction: column; gap: 8px; }
-  .stats-data-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 16px; border: 1px solid var(--border); }
+  .stats-data-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface2); border-radius: var(--radius-sm); padding: 12px 16px; border: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+  .stats-data-row:hover { background: #f1f5f9; }
   .stats-data-name { font-size: 14px; font-weight: 600; color: var(--text); }
   .stats-data-count { font-size: 15px; font-weight: 700; color: var(--primary); }
   .stats-empty-msg { text-align: center; color: var(--text3); font-size: 13px; padding: 30px 0; }
   
-  /* 병동 묶음 카드용 스타일 추가 */
+  /* 병동 세분화 카드 디자인 */
   .dept-group-card { background: #ffffff; border: 2px solid #2563EB; border-radius: 14px; padding: 16px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(37,99,235,0.06); }
   .dept-group-title { font-size: 17px; font-weight: 700; color: #2563EB; margin-bottom: 14px; border-bottom: 2px solid #EFF6FF; padding-bottom: 8px; display: flex; justify-content: space-between; }
   .sub-section-title { font-size: 13px; font-weight: 700; color: #64748B; margin: 12px 0 6px; padding-left: 6px; border-left: 3px solid #64748B; }
+
+  /* 환자 모달창 스타일 */
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+  .modal-content { background: white; width: 90%; max-width: 400px; border-radius: var(--radius); padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideUp 0.2s ease-out; }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+  .modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
+  .modal-close-btn { width: 100%; background: var(--text2); color: white; border: none; border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 16px; }
 </style>
 </head>
 <body>
@@ -116,7 +126,14 @@
     </div>
     
     <div id="stats-result-container" style="display:none;">
+      <div class="stats-section-title">📍 병동별 세분화 통계</div>
       <div id="stats-dept-group-container"></div>
+
+      <div class="stats-section-title">👥 전체 환자별 사용량 (클릭시 상세조회)</div>
+      <div id="stats-patient-list" class="stats-data-list"></div>
+
+      <div class="stats-section-title">✨ 기저귀 종류별 총 사용량</div>
+      <div id="stats-diaper-list" class="stats-data-list"></div>
     </div>
     
     <div id="stats-loading-msg" class="stats-empty-msg" style="display:none; font-weight: 600; color: var(--primary);">구글 스프레드시트 데이터 불러오는 중...</div>
@@ -246,7 +263,17 @@
   </div>
 </div>
 
+<div id="patientModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-title" id="modalPatientName">환자 상세 통계</div>
+    <div class="modal-sub" id="modalPatientPeriod">조회 기간</div>
+    <div id="modalDiaperList" class="stats-data-list"></div>
+    <button class="modal-close-btn" onclick="closePatientModal()">닫기</button>
+  </div>
+</div>
+
 <script>
+// [필독] 아래 주소 칸에 새로 고친 구글 스크립트 웹 앱 URL 주소를 넣어주세요.
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuo-UYQr3NmHJuGY2v-w4KcOObRfv2YX9Xs6CY9CQDxqhB2cOW_MxtuFToY8fu_CEN/exec";
 
 const state = {
@@ -261,7 +288,7 @@ const diaperTypes = {
   '위생깔개매트': [{name:'포인트 깔개매트'}, {name:'자가'}]
 };
 
-let globalPatientDetails = {};
+let globalPatientDetails = {}; 
 
 function init() {
   const now = new Date();
@@ -434,6 +461,7 @@ function parseToDateString(dStr) {
   return '';
 }
 
+// 📊 전체 통계 처리 대기적 로직 (통합본)
 function loadStatistics() {
   const startInput = document.getElementById('statsStartDate').value;
   const endInput = document.getElementById('statsEndDate').value;
@@ -445,44 +473,22 @@ function loadStatistics() {
 
   fetch(GOOGLE_SCRIPT_URL)
     .then(res => res.json())
-    .then(data => {
+    .then(rows => {
       document.getElementById('stats-loading-msg').style.display = 'none';
       document.getElementById('stats-result-container').style.display = 'block';
       
-      const deptGroups = {};
-      let rows = [];
+      const deptGroups = {}; // 세분화 병동 데이터 구조
+      const totalPatients = {}; // 전체 환자별 누적 구조
+      const totalDiapers = {}; // 전체 기저귀별 누적 구조
+      globalPatientDetails = {}; // 환자별 클릭 팝업용 상세 데이터 초기화
 
-      // [안정화 가드] 구글 서버에서 데이터가 이미 통계 형태로 오는지, 통 데이터로 오는지 둘 다 호환되도록 처리
-      if (Array.isArray(data)) {
-        if (data.length > 0 && (data[0].totalQty !== undefined || data[0].patients !== undefined)) {
-          // 1. 이미 구글 서버에서 통계 가공이 끝나서 내려온 경우
-          data.forEach(group => {
-            const dept = group.dept || "미지정 부서";
-            if (!deptGroups[dept]) {
-              deptGroups[dept] = { total: group.totalQty || 0, patients: {}, diapers: {} };
-            }
-            if (Array.isArray(group.patients)) {
-              group.patients.forEach(p => { deptGroups[dept].patients[p.name] = (deptGroups[dept].patients[p.name] || 0) + p.qty; });
-            }
-            if (Array.isArray(group.diapers)) {
-              group.diapers.forEach(d => { deptGroups[dept].diapers[d.type] = (deptGroups[dept].diapers[d.type] || 0) + d.qty; });
-            }
-          });
-          buildStatsUI(deptGroups);
-          return;
-        } else {
-          // 2. 가공되지 않은 통 데이터 행들이 내려온 경우
-          rows = data;
-        }
-      }
-
-      // 통 데이터(Raw 데이터)일 때 처리하는 로직
       rows.forEach(item => {
         let rawDate = item.date ? String(item.date).split('T')[0].trim() : '';
         let normalizedDateStr = parseToDateString(rawDate) || rawDate;
         
         if (!normalizedDateStr) return;
 
+        // 날짜 필터링 범위 내일 경우에만 집계
         if (normalizedDateStr >= startInput && normalizedDateStr <= endInput) {
           const qty = parseInt(item.qty) || 0;
           const dept = item.dept ? item.dept.trim() : "미지정 부서";
@@ -502,16 +508,112 @@ function loadStatistics() {
             pKey = `${String(item.patientName).trim()}(${pId} / ${roomString})`;
           }
 
+          // [A] 신규 추가: 세분화 병동별 그룹핑 계산
           if (!deptGroups[dept]) {
             deptGroups[dept] = { total: 0, patients: {}, diapers: {} };
           }
           deptGroups[dept].total += qty;
           deptGroups[dept].patients[pKey] = (deptGroups[dept].patients[pKey] || 0) + qty;
           deptGroups[dept].diapers[formattedType] = (deptGroups[dept].diapers[formattedType] || 0) + qty;
+
+          // [B] 기존 기능 복구: 전체 환자 통계 누적
+          totalPatients[pKey] = (totalPatients[pKey] || 0) + qty;
+
+          // [C] 기존 기능 복구: 전체 기저귀 통계 누적
+          totalDiapers[formattedType] = (totalDiapers[formattedType] || 0) + qty;
+
+          // [D] 기존 기능 복구: 환자 클릭시 띄워줄 상세 기저귀 종류 데이터 맵핑
+          if (!globalPatientDetails[pKey]) {
+            globalPatientDetails[pKey] = {};
+          }
+          globalPatientDetails[pKey][formattedType] = (globalPatientDetails[pKey][formattedType] || 0) + qty;
         }
       });
 
-      buildStatsUI(deptGroups);
+      // ---------------------------------------------
+      // UI 렌더링 1단계: 세분화된 병동 카드 출력
+      // ---------------------------------------------
+      const deptContainer = document.getElementById('stats-dept-group-container');
+      deptContainer.innerHTML = '';
+      const depts = Object.keys(deptGroups);
+
+      if(depts.length === 0) {
+        deptContainer.innerHTML = '<div class="stats-empty-msg">해당 기간 내 데이터가 없습니다.</div>';
+        document.getElementById('stats-patient-list').innerHTML = '';
+        document.getElementById('stats-diaper-list').innerHTML = '';
+        return;
+      }
+
+      depts.sort().forEach(deptName => {
+        const group = deptGroups[deptName];
+        const groupCard = document.createElement('div');
+        groupCard.className = 'dept-group-card';
+
+        const groupTitle = document.createElement('div');
+        groupTitle.className = 'dept-group-title';
+        groupTitle.innerHTML = `<span>📍 ${deptName}</span><span>총 ${group.total}개</span>`;
+        groupCard.appendChild(groupTitle);
+
+        const pSectionTitle = document.createElement('div');
+        pSectionTitle.className = 'sub-section-title';
+        pSectionTitle.textContent = '👥 환자별 사용 통계';
+        groupCard.appendChild(pSectionTitle);
+
+        const pListWrapper = document.createElement('div');
+        pListWrapper.className = 'stats-data-list';
+        Object.keys(group.patients).sort((a,b) => group.patients[b] - group.patients[a]).forEach(pk => {
+          const row = document.createElement('div');
+          row.className = 'stats-data-row';
+          row.style.cursor = 'default';
+          row.innerHTML = `<span class="stats-data-name">${pk}</span><span class="stats-data-count">${group.patients[pk]}개</span>`;
+          pListWrapper.appendChild(row);
+        });
+        groupCard.appendChild(pListWrapper);
+
+        const dSectionTitle = document.createElement('div');
+        dSectionTitle.className = 'sub-section-title';
+        dSectionTitle.textContent = '✨ 기저귀 종류별 통계';
+        groupCard.appendChild(dSectionTitle);
+
+        const dListWrapper = document.createElement('div');
+        dListWrapper.className = 'stats-data-list';
+        Object.keys(group.diapers).sort((a,b) => group.diapers[b] - group.diapers[a]).forEach(dk => {
+          const row = document.createElement('div');
+          row.className = 'stats-data-row';
+          row.style.cursor = 'default';
+          row.innerHTML = `<span class="stats-data-name">${dk}</span><span class="stats-data-count" style="color:var(--warning);">${group.diapers[dk]}개</span>`;
+          dListWrapper.appendChild(row);
+        });
+        groupCard.appendChild(dListWrapper);
+        deptContainer.appendChild(groupCard);
+      });
+
+      // ---------------------------------------------
+      // UI 렌더링 2단계: 기존 전체 환자 리스트 복구 (클릭 연동 포함)
+      // ---------------------------------------------
+      const patientContainer = document.getElementById('stats-patient-list');
+      patientContainer.innerHTML = '';
+      Object.keys(totalPatients).sort((a,b) => totalPatients[b] - totalPatients[a]).forEach(pName => {
+        const row = document.createElement('div');
+        row.className = 'stats-data-row';
+        row.onclick = function() { openPatientModal(pName, startInput, endInput); };
+        row.innerHTML = `<span class="stats-data-name">👤 ${pName}</span><span class="stats-data-count">${totalPatients[pName]}개 ></span>`;
+        patientContainer.appendChild(row);
+      });
+
+      // ---------------------------------------------
+      // UI 렌더링 3단계: 기존 전체 기저귀 리스트 복구
+      // ---------------------------------------------
+      const diaperContainer = document.getElementById('stats-diaper-list');
+      diaperContainer.innerHTML = '';
+      Object.keys(totalDiapers).sort((a,b) => totalDiapers[b] - totalDiapers[a]).forEach(dType => {
+        const row = document.createElement('div');
+        row.className = 'stats-data-row';
+        row.style.cursor = 'default';
+        row.innerHTML = `<span class="stats-data-name">📦 ${dType}</span><span class="stats-data-count" style="color:var(--warning);">${totalDiapers[dType]}개</span>`;
+        diaperContainer.appendChild(row);
+      });
+
     })
     .catch(err => {
       document.getElementById('stats-loading-msg').style.display = 'none';
@@ -520,63 +622,34 @@ function loadStatistics() {
     });
 }
 
-function buildStatsUI(deptGroups) {
-  const container = document.getElementById('stats-dept-group-container');
-  container.innerHTML = '';
-
-  const depts = Object.keys(deptGroups);
-  if(depts.length === 0) {
-    container.innerHTML = '<div class="stats-empty-msg">해당 기간 내 데이터가 없습니다.</div>';
-    return;
+// 팝업창 모달 열기 함수 (기존 기능 완벽 복구)
+function openPatientModal(patientKey, start, end) {
+  document.getElementById('modalPatientName').textContent = `👤 ${patientKey} 사용 상세`;
+  document.getElementById('modalPatientPeriod').textContent = `조회 기간: ${start} ~ ${end}`;
+  
+  const listContainer = document.getElementById('modalDiaperList');
+  listContainer.innerHTML = '';
+  
+  const patientData = globalPatientDetails[patientKey] || {};
+  const sortedDiapers = Object.keys(patientData).sort((a,b) => patientData[b] - patientData[a]);
+  
+  if(sortedDiapers.length === 0) {
+    listContainer.innerHTML = '<div class="stats-empty-msg">기록된 상세 데이터가 없습니다.</div>';
+  } else {
+    sortedDiapers.forEach(dName => {
+      const row = document.createElement('div');
+      row.className = 'stats-data-row';
+      row.style.cursor = 'default';
+      row.innerHTML = `<span class="stats-data-name">${dName}</span><span class="stats-data-count">${patientData[dName]}개</span>`;
+      listContainer.appendChild(row);
+    });
   }
+  
+  document.getElementById('patientModal').style.display = 'flex';
+}
 
-  depts.sort().forEach(deptName => {
-    const group = deptGroups[deptName];
-
-    const groupCard = document.createElement('div');
-    groupCard.className = 'dept-group-card';
-
-    const groupTitle = document.createElement('div');
-    groupTitle.className = 'dept-group-title';
-    groupTitle.innerHTML = `<span>📍 ${deptName}</span><span>총 ${group.total}개</span>`;
-    groupCard.appendChild(groupTitle);
-
-    const pSectionTitle = document.createElement('div');
-    pSectionTitle.className = 'sub-section-title';
-    pSectionTitle.textContent = '👥 환자별 사용 통계';
-    groupCard.appendChild(pSectionTitle);
-
-    const pListWrapper = document.createElement('div');
-    pListWrapper.className = 'stats-data-list';
-    
-    const pKeys = Object.keys(group.patients).sort((a,b) => group.patients[b] - group.patients[a]);
-    pKeys.forEach(pk => {
-      const row = document.createElement('div');
-      row.className = 'stats-data-row';
-      row.innerHTML = `<span class="stats-data-name">${pk}</span><span class="stats-data-count">${group.patients[pk]}개</span>`;
-      pListWrapper.appendChild(row);
-    });
-    groupCard.appendChild(pListWrapper);
-
-    const dSectionTitle = document.createElement('div');
-    dSectionTitle.className = 'sub-section-title';
-    dSectionTitle.textContent = '✨ 기저귀 종류별 통계';
-    groupCard.appendChild(dSectionTitle);
-
-    const dListWrapper = document.createElement('div');
-    dListWrapper.className = 'stats-data-list';
-
-    const dKeys = Object.keys(group.diapers).sort((a,b) => group.diapers[b] - group.diapers[a]);
-    dKeys.forEach(dk => {
-      const row = document.createElement('div');
-      row.className = 'stats-data-row';
-      row.innerHTML = `<span class="stats-data-name">${dk}</span><span class="stats-data-count" style="color:var(--warning);">${group.diapers[dk]}개</span>`;
-      dListWrapper.appendChild(row);
-    });
-    groupCard.appendChild(dListWrapper);
-
-    container.appendChild(groupCard);
-  });
+function closePatientModal() {
+  document.getElementById('patientModal').style.display = 'none';
 }
 
 function resetForm() {
