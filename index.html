@@ -112,7 +112,7 @@
     <div id="stats-result-container" style="display:none;">
       <div class="stats-section-title">병동별 사용 통계</div>
       <div class="stats-data-list" id="stats-dept-list"></div>
-      <div class="stats-section-title">환자별 사용 통계</div>
+      <div class="stats-section-title">환자별 사용 통계 (클릭 시 상세 조회)</div>
       <div class="stats-data-list" id="stats-patient-list"></div>
       <div class="stats-section-title">기저귀 종류별 통계</div>
       <div class="stats-data-list" id="stats-type-list"></div>
@@ -259,6 +259,9 @@ const diaperTypes = {
   '속기저귀': [{name:'포인트 일자형'}, {name:'자가'}],
   '위생깔개매트': [{name:'포인트 깔개매트'}, {name:'자가'}]
 };
+
+// 💡 [전역 변수 추가] 환자별 기저귀 세부 통계를 저장해둘 객체를 하나 선언합니다. (기존 로직엔 영향 없음)
+let globalPatientDetails = {};
 
 function init() {
   const now = new Date();
@@ -431,6 +434,24 @@ function parseToDateString(dStr) {
   return '';
 }
 
+// 💡 [클릭 핸들러 함수 추가] 환자 행을 클릭했을 때 작동하는 알림 메시지 로직입니다. (디자인 변경 없이 순수 기능만 추가)
+function showPatientDiaperDetails(patientKey) {
+  const details = globalPatientDetails[patientKey];
+  if (!details) {
+    alert(`${patientKey} 환자의 세부 기저귀 사용 정보가 없습니다.`);
+    return;
+  }
+  
+  let msg = `[${patientKey}] 기저귀 사용 상세\n\n`;
+  const sortedTypes = Object.keys(details).sort((a, b) => details[b] - details[a]);
+  
+  sortedTypes.forEach(type => {
+    msg += `${type}   ${details[type]}개\n`;
+  });
+  
+  alert(msg);
+}
+
 function loadStatistics() {
   const startInput = document.getElementById('statsStartDate').value;
   const endInput = document.getElementById('statsEndDate').value;
@@ -450,6 +471,9 @@ function loadStatistics() {
       document.getElementById('stats-result-container').style.display = 'block';
       
       const sumDept = {}, sumPatient = {}, sumType = {};
+      
+      // 💡 [초기화] 매 조회 시 환자별 세부 기저귀 카운트를 담을 바구니를 깨끗이 비워줍니다.
+      globalPatientDetails = {};
 
       rows.forEach(item => {
         let normalizedDateStr = parseToDateString(item.date);
@@ -463,28 +487,36 @@ function loadStatistics() {
         if (itemDate >= startDate && itemDate <= endDate) {
           const qty = parseInt(item.qty) || 0;
           if(item.dept) sumDept[item.dept] = (sumDept[item.dept] || 0) + qty;
+          
+          let catName = (item.diaperCat || "미확인").trim();
+          if(catName === "팬티형기저귀") catName = "팬티형 기저귀";
+          if(catName === "겉기저귀") catName = "겉 기저귀";
+          if(catName === "속기저귀") catName = "속 기저귀";
+          if(catName === "위생깔개매트") catName = "위생 깔개 매트";
+          
+          const formattedType = item.diaperType ? `${catName} - ${item.diaperType.trim()}` : "";
+
           if(item.patientName) {
             const pKey = `${item.patientName}(${item.roomNo ? item.roomNo + '호' : '미지정'})`;
             sumPatient[pKey] = (sumPatient[pKey] || 0) + qty;
+            
+            // 💡 [핵심 데이터 수집 로직 추가] 환자별로 어떤 기저귀를 몇 개 썼는지 "구분 - 종류" 텍스트 형태로 다중 누적 집계합니다.
+            if(formattedType) {
+              if (!globalPatientDetails[pKey]) {
+                globalPatientDetails[pKey] = {};
+              }
+              globalPatientDetails[pKey][formattedType] = (globalPatientDetails[pKey][formattedType] || 0) + qty;
+            }
           }
           
-          // 💡 [핵심 보정] 데이터에 매핑 조건(if)을 없애고 어떤 데이터가 들어오든 무조건 "[구분] - [종류]" 문자열을 완벽하게 생성하도록 보정했습니다.
-          if(item.diaperType) {
-            let catName = (item.diaperCat || "미확인").trim();
-            
-            // 데이터 표기 통일성을 위해 공백 유무를 한 방향으로 정규화합니다.
-            if(catName === "팬티형기저귀") catName = "팬티형 기저귀";
-            if(catName === "겉기저귀") catName = "겉 기저귀";
-            if(catName === "속기저귀") catName = "속 기저귀";
-            if(catName === "위생깔개매트") catName = "위생 깔개 매트";
-
-            const typeKey = `${catName} - ${item.diaperType.trim()}`;
-            sumType[typeKey] = (sumType[typeKey] || 0) + qty;
+          if(formattedType) {
+            sumType[formattedType] = (sumType[formattedType] || 0) + qty;
           }
         }
       });
 
-      const renderStatsList = (targetId, dataObj) => {
+      // 💡 [환자별 리스트 렌더링 분리] 클릭 이벤트를 심기 위해 renderStatsList 함수 내부를 인지하여 분기 구현했습니다.
+      const renderStatsList = (targetId, dataObj, isPatientList = false) => {
         const wrapper = document.getElementById(targetId); wrapper.innerHTML = '';
         const keys = Object.keys(dataObj);
         if(keys.length === 0) { wrapper.innerHTML = '<div class="stats-empty-msg">해당 기간 내 데이터가 없습니다.</div>'; return; }
@@ -493,13 +525,20 @@ function loadStatistics() {
         
         keys.forEach(k => {
           const row = document.createElement('div'); row.className = 'stats-data-row';
+          
+          // 💡 [클릭 이벤트 바인딩] 환자 통계 리스트일 때만 클릭 효과(cursor:pointer)와 클릭 시 세부 팝업창 함수를 호출하게 링크합니다.
+          if (isPatientList) {
+            row.style.cursor = 'pointer';
+            row.onclick = function() { showPatientDiaperDetails(k); };
+          }
+          
           row.innerHTML = `<span class="stats-data-name">${k}</span><span class="stats-data-count">${dataObj[k]}개</span>`;
           wrapper.appendChild(row);
         });
       };
 
       renderStatsList('stats-dept-list', sumDept);
-      renderStatsList('stats-patient-list', sumPatient);
+      renderStatsList('stats-patient-list', sumPatient, true); // 💡 환자 리스트에는 세부 확인용 플래그 true 전달
       renderStatsList('stats-type-list', sumType);
     })
     .catch(err => {
