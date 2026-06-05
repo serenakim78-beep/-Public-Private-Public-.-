@@ -70,12 +70,17 @@
         </form>
     </div>
 
-    <div id="adminSection" class="section">
-        <p style="font-size: 12px; color: #7f8c8d;">※ 최근 입력된 데이터를 기준으로 한 눈에 보여줍니다. 전체 통계는 구글 시트에서 확인하세요.</p>
+<div id="adminSection" class="section">
+        <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 15px;">※ 최근 입력된 데이터를 기준으로 상세 통계를 제공합니다.</p>
+        
+        <select id="statType" onchange="renderStats(window.cachedData)" style="margin-bottom: 15px; padding: 10px; width: 100%; font-weight: bold; background-color: #e8f4f8; border: 1px solid #3498db;">
+            <option value="dept">1. 부서별 통계 (부서 ➔ 환자 ➔ 기저귀)</option>
+            <option value="patient">2. 환자별 통계 (환자 ➔ 기저귀)</option>
+            <option value="diaper">3. 기저귀 종류별 통계 (기저귀 ➔ 환자)</option>
+        </select>
+
         <div id="statContent">데이터를 불러오는 중입니다...</div>
     </div>
-</div>
-
 <script>
     // 구글 앱스 스크립트 웹 앱 URL을 아래에 붙여넣으세요.
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzW1kpNGWxgAdLx5ZhFKQTGXhZvGnG_Eha-xxuCdvNOdS4AvZztlRBzVZY0ANRO41-s/exec';
@@ -202,3 +207,4 @@
 
 </body>
 </html>
+
