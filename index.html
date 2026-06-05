@@ -40,6 +40,13 @@
         /* 뱃지(Badge) UI */
         .badge { background: #ffebee; color: #c0392b; padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: bold; }
         .badge-total { background: #34495e; color: white; padding: 5px 12px; border-radius: 12px; font-size: 14px; font-weight: bold; }
+        
+        /* 날짜 검색 바 스타일 */
+        .date-filter-bar { display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end; }
+        .date-filter-bar .form-group { margin-bottom: 0; flex: 1; }
+        .date-filter-bar label { font-size: 12px; color: #7f8c8d; }
+        .btn-search { width: auto; padding: 10px 20px; background-color: #3498db; font-size: 14px; }
+        .btn-search:hover { background-color: #2980b9; }
     </style>
 </head>
 <body>
@@ -91,8 +98,20 @@
     </div>
 
     <div id="adminSection" class="section">
-        <p style="font-size: 13px; color: #7f8c8d; margin-bottom: 15px; text-align: center;">※ 최근 입력된 데이터를 기준으로 상세 통계를 제공합니다.</p>
+        <p style="font-size: 13px; color: #7f8c8d; margin-bottom: 15px; text-align: center;">※ 지정된 기간과 통계 유형에 따라 상세 통계를 제공합니다.</p>
         
+        <div class="date-filter-bar">
+            <div class="form-group">
+                <label>시작일</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="form-group">
+                <label>종료일</label>
+                <input type="date" id="endDate">
+            </div>
+            <button type="button" class="btn-search" onclick="renderStats(window.cachedData)">조회</button>
+        </div>
+
         <select id="statType" onchange="renderStats(window.cachedData)" style="margin-bottom: 20px; padding: 12px; width: 100%; font-weight: bold; background-color: #f8f9fa; border: 2px solid #3498db; border-radius: 8px;">
             <option value="dept">📊 부서별 통계 (부서 ➔ 환자 ➔ 기저귀)</option>
             <option value="patient">🧑 환자별 통계 (환자 ➔ 기저귀)</option>
@@ -106,8 +125,15 @@
 <script>
     const SCRIPT_URL = '여기에_복사한_웹앱_URL을_넣으세요';
 
+    // 입력 폼 기본 날짜/시간 설정
     document.getElementById('date').valueAsDate = new Date();
     document.getElementById('time').value = new Date().toTimeString().slice(0,5);
+
+    // [추가] 관리자 탭 기본 날짜 설정 (이번 달 1일부터 오늘까지)
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById('startDate').valueAsDate = firstDay;
+    document.getElementById('endDate').valueAsDate = today;
 
     const diaperData = {
         "팬티형 기저귀": [
@@ -205,7 +231,7 @@
         });
     }
 
-    // 가독성이 대폭 개선된 렌더링 함수
+    // [변경됨] 날짜 필터링 로직이 추가된 렌더링 함수
     function renderStats(data) {
         const statContent = document.getElementById('statContent');
         if (!data || data.length === 0) {
@@ -213,12 +239,34 @@
             return;
         }
 
+        // [추가] 1. 사용자가 설정한 필터 날짜 가져오기
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        // [추가] 2. 데이터 필터링 실행 (row[0]은 구글 시트의 첫 번째 열인 '사용 날짜'를 뜻합니다)
+        const filteredData = data.filter(row => {
+            const rowDate = row[0]; // 데이터 행의 날짜 정보
+            if (!rowDate) return false;
+            
+            // YYYY-MM-DD 형태의 문자열 비교 방식 활용
+            if (startDate && rowDate < startDate) return false;
+            if (endDate && rowDate > endDate) return false;
+            return true;
+        });
+
+        // [추가] 3. 필터링된 결과가 없을 때 처리
+        if (filteredData.length === 0) {
+            statContent.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d;">선택하신 기간 내에 입력된 데이터가 없습니다. 📅</div>';
+            return;
+        }
+
         const statType = document.getElementById('statType').value;
         let html = '';
 
+        // [변경] 이하 모든 그룹화 로직에서 원래 원본 'data' 대신 'filteredData'를 사용하도록 교체
         if (statType === 'dept') {
             const grouped = {};
-            data.forEach(row => {
+            filteredData.forEach(row => {
                 const dept = row[2] || '미지정 부서';
                 const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]})`;
                 const diaperInfo = `[${row[8]}] ${row[9]}`;
@@ -266,7 +314,7 @@
         } 
         else if (statType === 'patient') {
             const grouped = {};
-            data.forEach(row => {
+            filteredData.forEach(row => {
                 const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]})`;
                 const diaperInfo = `[${row[8]}] ${row[9]}`;
                 
@@ -297,7 +345,7 @@
         }
         else if (statType === 'diaper') {
             const grouped = {};
-            data.forEach(row => {
+            filteredData.forEach(row => {
                 const diaperInfo = `[${row[8]}] ${row[9]}`;
                 const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]}) - ${row[2]}`;
                 
