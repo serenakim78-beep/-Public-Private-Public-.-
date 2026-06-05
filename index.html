@@ -9,37 +9,17 @@
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #2c3e50; }
         .tabs { display: flex; margin-bottom: 20px; }
-        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; background: #ecf0f1; border: 1px solid #bdc3c7; border-bottom: none; }
-        .tab:first-child { border-radius: 8px 0 0 0; }
-        .tab:last-child { border-radius: 0 8px 0 0; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; background: #ecf0f1; border: 1px solid #bdc3c7; }
         .tab.active { background: #3498db; color: white; font-weight: bold; border-color: #3498db; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; font-size: 14px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         button { width: 100%; padding: 12px; background-color: #2ecc71; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
         button:hover { background-color: #27ae60; }
         .section { display: none; }
         .section.active { display: block; }
         #loading { display: none; text-align: center; color: #e74c3c; font-weight: bold; margin-top: 10px; }
-        
-        /* 통계 화면 전용 스타일 개선 */
-        .stat-details { background: #fff; margin-bottom: 15px; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
-        .stat-summary { font-weight: bold; font-size: 16px; padding: 15px; cursor: pointer; background: #f8f9fa; outline: none; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid transparent; }
-        .stat-details[open] .stat-summary { border-bottom-color: #e0e0e0; background: #fff; }
-        .stat-summary:hover { background: #f1f3f5; }
-        .stat-content { padding: 15px; background: #fff; }
-        
-        .stat-sub-item { margin-bottom: 15px; background: #fdfdfd; padding: 15px; border-radius: 8px; border: 1px solid #ecf0f1; border-left: 4px solid #3498db; }
-        .stat-sub-item:last-child { margin-bottom: 0; }
-        .stat-sub-title { font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ecf0f1; padding-bottom: 8px; }
-        
-        .stat-list { list-style: none; padding: 0; margin: 0; }
-        .stat-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #ecf0f1; font-size: 14px; color: #444; }
-        .stat-list li:last-child { border-bottom: none; padding-bottom: 0; }
-        
-        /* 뱃지(Badge) UI */
-        .badge { background: #ffebee; color: #c0392b; padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: bold; }
-        .badge-total { background: #34495e; color: white; padding: 5px 12px; border-radius: 12px; font-size: 14px; font-weight: bold; }
+        .stat-box { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-left: 4px solid #3498db; }
     </style>
 </head>
 <body>
@@ -66,11 +46,11 @@
                 </select>
             </div>
             <div class="form-group"><label>입력 직원 이름</label><input type="text" id="staffName" required></div>
-            <hr style="border: 0; border-top: 1px solid #ecf0f1; margin: 20px 0;">
+            <hr>
             <div class="form-group"><label>사용 환자 이름</label><input type="text" id="patientName" required></div>
             <div class="form-group"><label>사용 환자 번호 (차트번호)</label><input type="text" id="patientId" required></div>
             <div class="form-group"><label>사용 환자 병실</label><input type="text" id="room" placeholder="예: 301호" required></div>
-            <hr style="border: 0; border-top: 1px solid #ecf0f1; margin: 20px 0;">
+            <hr>
             <div class="form-group"><label>기저귀 구분</label>
                 <select id="category" onchange="updateTypes()" required>
                     <option value="">선택하세요</option>
@@ -91,12 +71,12 @@
     </div>
 
     <div id="adminSection" class="section">
-        <p style="font-size: 13px; color: #7f8c8d; margin-bottom: 15px; text-align: center;">※ 최근 입력된 데이터를 기준으로 상세 통계를 제공합니다.</p>
+        <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 15px;">※ 최근 입력된 데이터를 기준으로 상세 통계를 제공합니다.</p>
         
-        <select id="statType" onchange="renderStats(window.cachedData)" style="margin-bottom: 20px; padding: 12px; width: 100%; font-weight: bold; background-color: #f8f9fa; border: 2px solid #3498db; border-radius: 8px;">
-            <option value="dept">📊 부서별 통계 (부서 ➔ 환자 ➔ 기저귀)</option>
-            <option value="patient">🧑 환자별 통계 (환자 ➔ 기저귀)</option>
-            <option value="diaper">📦 기저귀 종류별 통계 (기저귀 ➔ 환자)</option>
+        <select id="statType" onchange="renderStats(window.cachedData)" style="margin-bottom: 15px; padding: 10px; width: 100%; font-weight: bold; background-color: #e8f4f8; border: 1px solid #3498db;">
+            <option value="dept">1. 부서별 통계 (부서 ➔ 환자 ➔ 기저귀)</option>
+            <option value="patient">2. 환자별 통계 (환자 ➔ 기저귀)</option>
+            <option value="diaper">3. 기저귀 종류별 통계 (기저귀 ➔ 환자)</option>
         </select>
 
         <div id="statContent">데이터를 불러오는 중입니다...</div>
@@ -104,11 +84,14 @@
 </div>
 
 <script>
+    // ★★★ 구글 앱스 스크립트 웹 앱 URL을 아래에 반드시 붙여넣으세요 ★★★
     const SCRIPT_URL = '여기에_복사한_웹앱_URL을_넣으세요';
 
+    // 오늘 날짜 및 시간 자동 설정
     document.getElementById('date').valueAsDate = new Date();
     document.getElementById('time').value = new Date().toTimeString().slice(0,5);
 
+    // 기저귀 종류 데이터 매핑
     const diaperData = {
         "팬티형 기저귀": [
             "국산 서림 시그널라인 언더웨어 대형 흡수율 800 대형",
@@ -139,6 +122,7 @@
         }
     }
 
+    // 탭 전환 로직
     function switchTab(tabName) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -152,6 +136,7 @@
         }
     }
 
+    // 데이터 제출 로직
     document.getElementById('diaperForm').addEventListener('submit', function(e) {
         e.preventDefault();
         document.getElementById('loading').style.display = 'block';
@@ -188,11 +173,12 @@
         });
     });
 
+    // 전역 변수로 데이터를 저장해두어 탭을 바꿀 때마다 새로고침하지 않도록 함
     window.cachedData = []; 
 
     function loadStats() {
         const statContent = document.getElementById('statContent');
-        statContent.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d;">데이터를 불러오는 중입니다...⏳</div>';
+        statContent.innerHTML = '<div style="text-align:center; padding:20px;">데이터를 불러오는 중입니다...⏳</div>';
 
         fetch(SCRIPT_URL)
         .then(response => response.json())
@@ -201,27 +187,32 @@
             renderStats(data);
         })
         .catch(err => {
-            statContent.innerHTML = '<div style="color:#e74c3c; text-align:center; padding:20px; font-weight:bold;">통계를 불러오는데 실패했습니다.</div>';
+            statContent.innerHTML = '<div style="color:red; text-align:center;">통계를 불러오는데 실패했습니다.</div>';
         });
     }
 
-    // 가독성이 대폭 개선된 렌더링 함수
+    // 조건 8번을 완벽히 구현한 렌더링 함수
     function renderStats(data) {
         const statContent = document.getElementById('statContent');
         if (!data || data.length === 0) {
-            statContent.innerHTML = '<div style="text-align:center; padding:20px; color:#7f8c8d;">입력된 데이터가 없습니다.</div>';
+            statContent.innerHTML = '입력된 데이터가 없습니다.';
             return;
         }
 
         const statType = document.getElementById('statType').value;
         let html = '';
 
+        // 디테일 태그용 공통 스타일
+        const detailStyle = 'margin-bottom: 10px; background: #fff; padding: 12px; border: 1px solid #ddd; border-radius: 5px;';
+        const summaryStyle = 'font-weight: bold; font-size: 1.05em; cursor: pointer; outline: none;';
+
         if (statType === 'dept') {
+            // 8-1) 부서별 통계: 부서 -> 환자정보 -> 기저귀
             const grouped = {};
             data.forEach(row => {
                 const dept = row[2] || '미지정 부서';
-                const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]})`;
-                const diaperInfo = `[${row[8]}] ${row[9]}`;
+                const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]})`; // 이름 (번호, 병실)
+                const diaperInfo = `[${row[8]}] ${row[9]}`; // [구분] 종류
                 
                 if (!grouped[dept]) grouped[dept] = {};
                 if (!grouped[dept][patientInfo]) grouped[dept][patientInfo] = {};
@@ -229,42 +220,19 @@
             });
 
             for (const dept in grouped) {
-                let deptTotal = 0;
-                let deptHtml = '';
-                
+                html += `<details open style="${detailStyle} border-left: 4px solid #3498db;"><summary style="${summaryStyle}">🏢 ${dept}</summary><div style="margin-top:10px; padding-left: 10px;">`;
                 for (const patient in grouped[dept]) {
-                    let patientTotal = 0;
-                    let patientHtml = `<ul class="stat-list">`;
-                    
+                    html += `<div style="margin-bottom: 12px; background: #f9f9f9; padding: 10px; border-radius: 5px;"><strong>🧑 ${patient}</strong><ul style="margin: 5px 0 0 0; padding-left: 20px;">`;
                     for (const diaper in grouped[dept][patient]) {
-                        const count = grouped[dept][patient][diaper];
-                        patientTotal += count;
-                        patientHtml += `<li><span style="flex:1;">${diaper}</span> <span class="badge">${count}개</span></li>`;
+                        html += `<li style="margin-bottom:3px; font-size: 0.9em;">${diaper}: <b style="color:#e74c3c;">${grouped[dept][patient][diaper]}개</b></li>`;
                     }
-                    patientHtml += `</ul>`;
-                    deptTotal += patientTotal;
-                    
-                    deptHtml += `
-                        <div class="stat-sub-item" style="border-left-color: #3498db;">
-                            <div class="stat-sub-title">
-                                <span>🧑 ${patient}</span>
-                                <span class="badge-total" style="background:#7f8c8d;">${patientTotal}개</span>
-                            </div>
-                            ${patientHtml}
-                        </div>`;
+                    html += `</ul></div>`;
                 }
-                
-                html += `
-                    <details class="stat-details" open>
-                        <summary class="stat-summary" style="border-left: 5px solid #3498db;">
-                            <span>🏢 ${dept}</span>
-                            <span class="badge-total">총 ${deptTotal}개</span>
-                        </summary>
-                        <div class="stat-content">${deptHtml}</div>
-                    </details>`;
+                html += `</div></details>`;
             }
         } 
         else if (statType === 'patient') {
+            // 8-2) 환자별 통계: 환자정보 -> 기저귀
             const grouped = {};
             data.forEach(row => {
                 const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]})`;
@@ -275,59 +243,34 @@
             });
 
             for (const patient in grouped) {
-                let patientTotal = 0;
-                let patientHtml = `<ul class="stat-list">`;
-                
+                html += `<details style="${detailStyle} border-left: 4px solid #2ecc71;"><summary style="${summaryStyle}">🧑 ${patient}</summary><ul style="margin-top:10px; padding-left: 20px; background: #f9f9f9; padding: 10px 10px 10px 30px; border-radius: 5px;">`;
                 for (const diaper in grouped[patient]) {
-                    const count = grouped[patient][diaper];
-                    patientTotal += count;
-                    patientHtml += `<li><span style="flex:1;">${diaper}</span> <span class="badge">${count}개</span></li>`;
+                    html += `<li style="margin-bottom:5px;">${diaper}: <b style="color:#e74c3c;">${grouped[patient][diaper]}개</b></li>`;
                 }
-                patientHtml += `</ul>`;
-                
-                html += `
-                    <details class="stat-details" open>
-                        <summary class="stat-summary" style="border-left: 5px solid #2ecc71;">
-                            <span>🧑 ${patient}</span>
-                            <span class="badge-total" style="background:#2ecc71;">총 ${patientTotal}개</span>
-                        </summary>
-                        <div class="stat-content">${patientHtml}</div>
-                    </details>`;
+                html += `</ul></details>`;
             }
         }
         else if (statType === 'diaper') {
+            // 8-3) 기저귀 구분-종류별 통계: 기저귀 -> 환자정보
             const grouped = {};
             data.forEach(row => {
                 const diaperInfo = `[${row[8]}] ${row[9]}`;
-                const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]}) - ${row[2]}`;
+                const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]}) - ${row[2]}`; // 이름 (번호, 병실) - 부서
                 
                 if (!grouped[diaperInfo]) grouped[diaperInfo] = {};
                 grouped[diaperInfo][patientInfo] = (grouped[diaperInfo][patientInfo] || 0) + 1;
             });
 
             for (const diaper in grouped) {
-                let diaperTotal = 0;
-                let diaperHtml = `<ul class="stat-list">`;
-                
+                html += `<details style="${detailStyle} border-left: 4px solid #f39c12;"><summary style="${summaryStyle}">📦 ${diaper}</summary><ul style="margin-top:10px; padding-left: 20px; background: #f9f9f9; padding: 10px 10px 10px 30px; border-radius: 5px;">`;
                 for (const patient in grouped[diaper]) {
-                    const count = grouped[diaper][patient];
-                    diaperTotal += count;
-                    diaperHtml += `<li><span style="flex:1;">${patient}</span> <span class="badge">${count}개</span></li>`;
+                    html += `<li style="margin-bottom:5px;">${patient}: <b style="color:#e74c3c;">${grouped[diaper][patient]}개</b> 사용</li>`;
                 }
-                diaperHtml += `</ul>`;
-
-                html += `
-                    <details class="stat-details" open>
-                        <summary class="stat-summary" style="border-left: 5px solid #f39c12;">
-                            <span style="font-size: 14px;">📦 ${diaper}</span>
-                            <span class="badge-total" style="background:#f39c12;">총 ${diaperTotal}개</span>
-                        </summary>
-                        <div class="stat-content">${diaperHtml}</div>
-                    </details>`;
+                html += `</ul></details>`;
             }
         }
 
-        html += '<br><a href="https://docs.google.com/spreadsheets" target="_blank" style="display:block; text-align:center; padding:15px; background:#ecf0f1; border-radius:8px; text-decoration:none; color:#2c3e50; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: background 0.3s;">🔗 구글 시트 원본 데이터 열기</a>';
+        html += '<br><a href="https://docs.google.com/spreadsheets" target="_blank" style="display:block; text-align:center; padding:12px; background:#ecf0f1; border-radius:5px; text-decoration:none; color:#2c3e50; font-weight:bold;">🔗 구글 시트 원본 데이터 열기</a>';
         statContent.innerHTML = html;
     }
 </script>
