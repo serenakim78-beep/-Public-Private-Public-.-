@@ -70,7 +70,7 @@
         </form>
     </div>
 
-<div id="adminSection" class="section">
+    <div id="adminSection" class="section">
         <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 15px;">※ 최근 입력된 데이터를 기준으로 상세 통계를 제공합니다.</p>
         
         <select id="statType" onchange="renderStats(window.cachedData)" style="margin-bottom: 15px; padding: 10px; width: 100%; font-weight: bold; background-color: #e8f4f8; border: 1px solid #3498db;">
@@ -81,8 +81,10 @@
 
         <div id="statContent">데이터를 불러오는 중입니다...</div>
     </div>
+</div>
+
 <script>
-    // 구글 앱스 스크립트 웹 앱 URL을 아래에 붙여넣으세요.
+    // ★★★ 구글 앱스 스크립트 웹 앱 URL을 아래에 반드시 붙여넣으세요 ★★★
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzW1kpNGWxgAdLx5ZhFKQTGXhZvGnG_Eha-xxuCdvNOdS4AvZztlRBzVZY0ANRO41-s/exec';
 
     // 오늘 날짜 및 시간 자동 설정
@@ -171,40 +173,107 @@
         });
     });
 
-    // 통계 불러오기 (간단한 요약)
+    // 전역 변수로 데이터를 저장해두어 탭을 바꿀 때마다 새로고침하지 않도록 함
+    window.cachedData = []; 
+
     function loadStats() {
         const statContent = document.getElementById('statContent');
-        statContent.innerHTML = '데이터를 불러오는 중입니다...';
+        statContent.innerHTML = '<div style="text-align:center; padding:20px;">데이터를 불러오는 중입니다...⏳</div>';
 
         fetch(SCRIPT_URL)
         .then(response => response.json())
         .then(data => {
-            if(data.length === 0) {
-                statContent.innerHTML = '입력된 데이터가 없습니다.';
-                return;
-            }
-
-            // 총 사용량 요약 (기저귀 구분별)
-            let categoryCount = {};
-            data.forEach(row => {
-                let cat = row[8]; // 기저귀 구분
-                categoryCount[cat] = (categoryCount[cat] || 0) + 1;
-            });
-
-            let html = '<h3>전체 기저귀 사용 요약 (누적)</h3>';
-            for (const [key, value] of Object.entries(categoryCount)) {
-                html += `<div class="stat-box"><strong>${key}</strong>: ${value}개 사용</div>`;
-            }
-            
-            html += '<br><a href="https://docs.google.com/spreadsheets" target="_blank">🔗 구글 시트에서 상세 통계(부서/환자별) 확인하기</a>';
-            statContent.innerHTML = html;
+            window.cachedData = data;
+            renderStats(data);
         })
         .catch(err => {
-            statContent.innerHTML = '통계를 불러오는데 실패했습니다.';
+            statContent.innerHTML = '<div style="color:red; text-align:center;">통계를 불러오는데 실패했습니다.</div>';
         });
+    }
+
+    // 조건 8번을 완벽히 구현한 렌더링 함수
+    function renderStats(data) {
+        const statContent = document.getElementById('statContent');
+        if (!data || data.length === 0) {
+            statContent.innerHTML = '입력된 데이터가 없습니다.';
+            return;
+        }
+
+        const statType = document.getElementById('statType').value;
+        let html = '';
+
+        // 디테일 태그용 공통 스타일
+        const detailStyle = 'margin-bottom: 10px; background: #fff; padding: 12px; border: 1px solid #ddd; border-radius: 5px;';
+        const summaryStyle = 'font-weight: bold; font-size: 1.05em; cursor: pointer; outline: none;';
+
+        if (statType === 'dept') {
+            // 8-1) 부서별 통계: 부서 -> 환자정보 -> 기저귀
+            const grouped = {};
+            data.forEach(row => {
+                const dept = row[2] || '미지정 부서';
+                const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]})`; // 이름 (번호, 병실)
+                const diaperInfo = `[${row[8]}] ${row[9]}`; // [구분] 종류
+                
+                if (!grouped[dept]) grouped[dept] = {};
+                if (!grouped[dept][patientInfo]) grouped[dept][patientInfo] = {};
+                grouped[dept][patientInfo][diaperInfo] = (grouped[dept][patientInfo][diaperInfo] || 0) + 1;
+            });
+
+            for (const dept in grouped) {
+                html += `<details open style="${detailStyle} border-left: 4px solid #3498db;"><summary style="${summaryStyle}">🏢 ${dept}</summary><div style="margin-top:10px; padding-left: 10px;">`;
+                for (const patient in grouped[dept]) {
+                    html += `<div style="margin-bottom: 12px; background: #f9f9f9; padding: 10px; border-radius: 5px;"><strong>🧑 ${patient}</strong><ul style="margin: 5px 0 0 0; padding-left: 20px;">`;
+                    for (const diaper in grouped[dept][patient]) {
+                        html += `<li style="margin-bottom:3px; font-size: 0.9em;">${diaper}: <b style="color:#e74c3c;">${grouped[dept][patient][diaper]}개</b></li>`;
+                    }
+                    html += `</ul></div>`;
+                }
+                html += `</div></details>`;
+            }
+        } 
+        else if (statType === 'patient') {
+            // 8-2) 환자별 통계: 환자정보 -> 기저귀
+            const grouped = {};
+            data.forEach(row => {
+                const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]})`;
+                const diaperInfo = `[${row[8]}] ${row[9]}`;
+                
+                if (!grouped[patientInfo]) grouped[patientInfo] = {};
+                grouped[patientInfo][diaperInfo] = (grouped[patientInfo][diaperInfo] || 0) + 1;
+            });
+
+            for (const patient in grouped) {
+                html += `<details style="${detailStyle} border-left: 4px solid #2ecc71;"><summary style="${summaryStyle}">🧑 ${patient}</summary><ul style="margin-top:10px; padding-left: 20px; background: #f9f9f9; padding: 10px 10px 10px 30px; border-radius: 5px;">`;
+                for (const diaper in grouped[patient]) {
+                    html += `<li style="margin-bottom:5px;">${diaper}: <b style="color:#e74c3c;">${grouped[patient][diaper]}개</b></li>`;
+                }
+                html += `</ul></details>`;
+            }
+        }
+        else if (statType === 'diaper') {
+            // 8-3) 기저귀 구분-종류별 통계: 기저귀 -> 환자정보
+            const grouped = {};
+            data.forEach(row => {
+                const diaperInfo = `[${row[8]}] ${row[9]}`;
+                const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]}) - ${row[2]}`; // 이름 (번호, 병실) - 부서
+                
+                if (!grouped[diaperInfo]) grouped[diaperInfo] = {};
+                grouped[diaperInfo][patientInfo] = (grouped[diaperInfo][patientInfo] || 0) + 1;
+            });
+
+            for (const diaper in grouped) {
+                html += `<details style="${detailStyle} border-left: 4px solid #f39c12;"><summary style="${summaryStyle}">📦 ${diaper}</summary><ul style="margin-top:10px; padding-left: 20px; background: #f9f9f9; padding: 10px 10px 10px 30px; border-radius: 5px;">`;
+                for (const patient in grouped[diaper]) {
+                    html += `<li style="margin-bottom:5px;">${patient}: <b style="color:#e74c3c;">${grouped[diaper][patient]}개</b> 사용</li>`;
+                }
+                html += `</ul></details>`;
+            }
+        }
+
+        html += '<br><a href="https://docs.google.com/spreadsheets" target="_blank" style="display:block; text-align:center; padding:12px; background:#ecf0f1; border-radius:5px; text-decoration:none; color:#2c3e50; font-weight:bold;">🔗 구글 시트 원본 데이터 열기</a>';
+        statContent.innerHTML = html;
     }
 </script>
 
 </body>
 </html>
-
