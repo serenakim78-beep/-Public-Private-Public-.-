@@ -123,13 +123,14 @@
 </div>
 
 <script>
+    // ⚠️ 주의: 반드시 이 부분에 본인의 구글 앱스 스크립트 웹앱 배포 URL을 넣어주세요!
     const SCRIPT_URL = '여기에_복사한_웹앱_URL을_넣으세요';
 
-    // 입력 폼 기본 날짜/시간 설정
+    // 입력 폼 기본 날짜/시간 설정 (오늘)
     document.getElementById('date').valueAsDate = new Date();
     document.getElementById('time').value = new Date().toTimeString().slice(0,5);
 
-    // [추가] 관리자 탭 기본 날짜 설정 (이번 달 1일부터 오늘까지)
+    // 관리자 탭 기본 날짜 설정 (이번 달 1일부터 오늘까지 자동 설정)
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     document.getElementById('startDate').valueAsDate = firstDay;
@@ -231,7 +232,33 @@
         });
     }
 
-    // [변경됨] 날짜 필터링 로직이 추가된 렌더링 함수
+    // [안전 도구] 구글 시트 날짜 데이터를 YYYY-MM-DD 문자열 형태로 정밀 가공해주는 변환 함수
+    function parseDateString(rawDate) {
+        if (!rawDate) return '';
+        
+        // 데이터 유형이 이미 Date 객체거나 ISO 규격 문자열인 경우 분리 가공
+        let d = new Date(rawDate);
+        if (!isNaN(d.getTime())) {
+            let yyyy = d.getFullYear();
+            let mm = String(d.getMonth() + 1).padStart(2, '0');
+            let dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+        
+        // 정규식을 이용해 숫자가 아닌 문자들(., /, 년, 월, 일 등)을 기준으로 년-월-일 가공추출
+        let matches = String(rawDate).match(/\d+/g);
+        if (matches && matches.length >= 3) {
+            let yyyy = matches[0];
+            let mm = matches[1].padStart(2, '0');
+            let dd = matches[2].padStart(2, '0');
+            if (yyyy.length === 2) yyyy = '20' + yyyy; // 26년 -> 2026년 처리
+            return `${yyyy}-${mm}-${dd}`;
+        }
+        
+        return String(rawDate).trim();
+    }
+
+    // 날짜별 검색 기능이 동기화된 데이터 렌더링 함수
     function renderStats(data) {
         const statContent = document.getElementById('statContent');
         if (!data || data.length === 0) {
@@ -239,31 +266,35 @@
             return;
         }
 
-        // [추가] 1. 사용자가 설정한 필터 날짜 가져오기
+        // 1. 관리자가 지정한 입력 필드의 필터 날짜 (형식: YYYY-MM-DD)
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
 
-        // [추가] 2. 데이터 필터링 실행 (row[0]은 구글 시트의 첫 번째 열인 '사용 날짜'를 뜻합니다)
+        // 2. 구글 시트 원본 데이터를 정밀 필터링 처리
         const filteredData = data.filter(row => {
-            const rowDate = row[0]; // 데이터 행의 날짜 정보
-            if (!rowDate) return false;
+            // row[0]은 구글 시트 상 첫 번째 열(날짜)에 해당합니다.
+            let rawRowDate = row[0]; 
+            if (!rawRowDate) return false;
             
-            // YYYY-MM-DD 형태의 문자열 비교 방식 활용
-            if (startDate && rowDate < startDate) return false;
-            if (endDate && rowDate > endDate) return false;
+            // 시트 데이터를 YYYY-MM-DD 텍스트 형식으로 변환하여 매칭률 최적화
+            let formattedRowDate = parseDateString(rawRowDate);
+            
+            // 날짜 비교 (텍스트 정렬 조건 기반 문자열 매칭 방식 활용)
+            if (startDate && formattedRowDate < startDate) return false;
+            if (endDate && formattedRowDate > endDate) return false;
             return true;
         });
 
-        // [추가] 3. 필터링된 결과가 없을 때 처리
+        // 3. 필터링된 날짜 범위 내에 결과가 존재하지 않을 때 예외 문구 출력
         if (filteredData.length === 0) {
-            statContent.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d;">선택하신 기간 내에 입력된 데이터가 없습니다. 📅</div>';
+            statContent.innerHTML = '<div style="text-align:center; padding:30px; color:#7f8c8d;">선택하신 기간 내에 입력된 데이터가 없습니다. 📅<br><span style="font-size:11px; color:#95a5a6;">(데이터가 존재하는 다른 날짜를 지정하거나 시작일을 과거로 늘려보세요.)</span></div>';
             return;
         }
 
         const statType = document.getElementById('statType').value;
         let html = '';
 
-        // [변경] 이하 모든 그룹화 로직에서 원래 원본 'data' 대신 'filteredData'를 사용하도록 교체
+        // 필터링된 데이터를 바탕으로 통계 레이아웃 빌드 시작
         if (statType === 'dept') {
             const grouped = {};
             filteredData.forEach(row => {
