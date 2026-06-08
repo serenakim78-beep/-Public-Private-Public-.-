@@ -16,7 +16,8 @@
     input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
     button { width: 100%; padding: 12px; background-color: #2ecc71; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     button:hover { background-color: #27ae60; }
-    button.edit-btn { background-color: #f39c12; padding: 8px; font-size: 14px; margin-top: 5px; }
+    button.edit-btn { background-color: #f39c12; padding: 10px; font-size: 15px; font-weight: bold; margin-top: 10px; border-radius: 5px; color: white; border: none; cursor: pointer; }
+    button.edit-btn:hover { background-color: #e67e22; }
     .section { display: none; }
     .section.active { display: block; }
     #loading { display: none; text-align: center; color: #e74c3c; font-weight: bold; margin-top: 10px; }
@@ -24,6 +25,9 @@
     .filter-row { display: flex; gap: 10px; margin-bottom: 10px; }
     .filter-row > div { flex: 1; }
     .stat-summary { font-size: 1.1em; font-weight: bold; color: #c0392b; margin-bottom: 10px; padding: 10px; background: #fadbd8; border-radius: 5px; text-align: center; }
+    .record-card { background: #fff; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .record-line { margin-bottom: 6px; font-size: 0.95em; }
+    .record-line strong { display: inline-block; width: 90px; color: #2c3e50; }
   </style>
 </head>
 <body>
@@ -38,7 +42,9 @@
 
     <div id="inputSection" class="section active">
       <form id="diaperForm">
-        <input type="hidden" id="editRowIdx" value=""> <div class="form-group"><label>사용 날짜</label><input type="date" id="date" required></div>
+        <input type="hidden" id="editRowIdx" value="">
+        
+        <div class="form-group"><label>사용 날짜</label><input type="date" id="date" required></div>
         <div class="form-group"><label>사용 시간</label><input type="time" id="time" required></div>
         
         <div class="form-group">
@@ -127,15 +133,16 @@
           <label>통합 검색 (부서, 환자이름, 병실, 기저귀 종류)</label>
           <input type="text" id="searchKeyword" placeholder="검색어를 입력하세요">
         </div>
+        
+        <select id="statType" style="margin-bottom: 10px; padding: 10px; width: 100%; font-weight: bold; background-color: #fff; border: 2px solid #3498db;">
+          <option value="dept">1. 부서별 통계 (부서 ➔ 환자 ➔ 기저귀)</option>
+          <option value="patient">2. 환자별 통계 (환자 ➔ 상세내역)</option>
+          <option value="diaper">3. 기저귀 종류별 통계 (기저귀 ➔ 환자)</option>
+        </select>
+
         <button type="button" onclick="renderStats()">조건 적용하여 조회하기</button>
       </div>
 
-      <select id="statType" onchange="renderStats()" style="margin-bottom: 15px; padding: 10px; width: 100%; font-weight: bold; background-color: #fff; border: 2px solid #3498db;">
-        <option value="dept">1. 부서별 통계 (부서 ➔ 환자 ➔ 기저귀)</option>
-        <option value="patient">2. 환자별 통계 (환자 ➔ 기저귀)</option>
-        <option value="diaper">3. 기저귀 종류별 통계 (기저귀 ➔ 환자)</option>
-      </select>
-      
       <div id="statContent">데이터를 불러오는 중입니다...</div>
     </div>
 
@@ -144,13 +151,11 @@
   <script>
     // ★★★ 새로 배포한 웹 앱 URL을 반드시 입력하세요 ★★★
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKh9Ndh3jOqJ0fwAGLUbU91J1yteVvO8S71SeU6iH5KtAUJEqVSPtiM9q6EYJxZdwn/exec'; 
-    window.cachedData = []; // 데이터 캐싱용 전역 변수
+    window.cachedData = []; 
 
-    // 초기 날짜/시간 설정
     document.getElementById('date').valueAsDate = new Date();
     document.getElementById('time').value = new Date().toTimeString().slice(0,5);
 
-    // 기저귀 종류 매핑 (자가 옵션 추가)
     const diaperData = {
       "팬티형 기저귀": [
         "국산 서림 시그널라인 언더웨어 대형 흡수율 800 대형", "국산 서림 시그널라인 언더웨어 특대형 흡수율 880 특대형",
@@ -208,7 +213,26 @@
       }
     }
 
-    // 폼 제출 로직 (저장 및 수정 공통)
+    // 날짜 및 시간 깔끔하게 정리하는 헬퍼 함수 추가
+    function safeFormatDate(val) {
+      if (!val) return "";
+      let s = String(val);
+      if (s.includes("T")) return s.split("T")[0]; // YYYY-MM-DD 만 추출
+      return s;
+    }
+
+    function safeFormatTime(val) {
+      if (!val) return "";
+      let s = String(val);
+      if (s.includes("T")) {
+        let d = new Date(s);
+        if (!isNaN(d.getTime())) {
+          return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        }
+      }
+      return s;
+    }
+
     document.getElementById('diaperForm').addEventListener('submit', function(e) {
       e.preventDefault();
       document.getElementById('loading').style.display = 'block';
@@ -234,20 +258,16 @@
         rowIdx: rowIdx
       };
 
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(data)
-      })
+      fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
       .then(response => response.json())
       .then(result => {
         alert(rowIdx ? '성공적으로 수정되었습니다!' : '성공적으로 저장되었습니다!');
-        cancelEdit(); // 폼 초기화
+        cancelEdit();
       })
       .catch(error => { alert('오류가 발생했습니다. 다시 시도해주세요.'); })
       .finally(() => { document.getElementById('loading').style.display = 'none'; });
     });
 
-    // 데이터 호출 (통계 및 수정용)
     function loadStats() {
       document.getElementById('statContent').innerHTML = '<div style="text-align:center;">⏳ 데이터를 불러오는 중...</div>';
       fetch(SCRIPT_URL)
@@ -261,7 +281,7 @@
         });
     }
 
-    // 본인 기록 불러오기 (수정 기능용)
+    // 내 기록 수정 목록 렌더링
     function loadMyRecords() {
       const myName = document.getElementById('searchMyName').value.trim();
       if(!myName) return alert("이름을 입력하세요!");
@@ -281,22 +301,27 @@
           let html = '';
           myData.forEach(item => {
             const r = item.rowData;
-            html += `<div style="background:#fff; border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:5px;">
-              <strong>${r[0]} ${r[1]}</strong> | 환자: ${r[5]}(${r[7]}호) <br>
-              <span style="color:#7f8c8d; font-size:0.9em;">[${r[8]}] ${r[9]}</span>
-              <button class="edit-btn" onclick='editRecord(${JSON.stringify(item)})'>이 기록 수정하기</button>
+            const fDate = safeFormatDate(r[0]);
+            const fTime = safeFormatTime(r[1]);
+            
+            // 직관적인 리스트업 반영
+            html += `<div class="record-card">
+              <div class="record-line"><strong>📅 날짜/시간</strong> ${fDate} ${fTime}</div>
+              <div class="record-line"><strong>🧑 환자</strong> ${r[5]} (No.${r[6]}, ${r[7]}호)</div>
+              <div class="record-line"><strong>👤 입력 직원</strong> ${r[4]}</div>
+              <div class="record-line"><strong>📦 데이터</strong> [${r[8]}] ${r[9]} <span style="color:#e74c3c;">(1개)</span></div>
+              <button class="edit-btn" style="width:100%;" onclick='editRecord(${JSON.stringify(item)})'>이 기록 수정하기</button>
             </div>`;
           });
           content.innerHTML = html;
         });
     }
 
-    // 폼에 데이터 세팅 (수정 모드 진입)
     function editRecord(item) {
       const r = item.rowData;
       document.getElementById('editRowIdx').value = item.rowIdx;
-      document.getElementById('date').value = r[0];
-      document.getElementById('time').value = r[1];
+      document.getElementById('date').value = safeFormatDate(r[0]); // 시간형식 정리하여 삽입
+      document.getElementById('time').value = safeFormatTime(r[1]);
       document.getElementById('department').value = r[2];
       document.getElementById('staffType').value = r[3];
       document.getElementById('staffName').value = r[4];
@@ -305,7 +330,7 @@
       document.getElementById('room').value = r[7];
       document.getElementById('category').value = r[8];
       
-      updateTypes(); // 카테고리 로드
+      updateTypes();
       
       const typeSelect = document.getElementById('type');
       if(r[9].startsWith('[자가]')) {
@@ -318,7 +343,7 @@
 
       document.getElementById('submitBtn').innerText = "수정 내용 저장하기";
       document.getElementById('cancelEditBtn').style.display = 'block';
-      switchTab('input'); // 입력 탭으로 자동 이동
+      switchTab('input');
     }
 
     function cancelEdit() {
@@ -331,25 +356,22 @@
       updateTypes();
     }
 
-    // 통계 렌더링 (필터 적용 포함)
     function renderStats() {
       const statContent = document.getElementById('statContent');
       if (!window.cachedData || window.cachedData.length === 0) {
         statContent.innerHTML = '입력된 데이터가 없습니다.'; return;
       }
 
-      // 1. 데이터 필터링 (기간 및 검색어)
       const startDate = document.getElementById('startDate').value;
       const endDate = document.getElementById('endDate').value;
       const keyword = document.getElementById('searchKeyword').value.toLowerCase();
 
       let filteredData = window.cachedData.filter(item => {
         const r = item.rowData;
-        // 날짜 필터 (r[0]은 YYYY-MM-DD 형태)
-        if(startDate && r[0] < startDate) return false;
-        if(endDate && r[0] > endDate) return false;
+        const fDate = safeFormatDate(r[0]); // 필터링 시 깔끔한 날짜로 비교
+        if(startDate && fDate < startDate) return false;
+        if(endDate && fDate > endDate) return false;
         
-        // 검색 필터 (부서, 환자이름, 병실, 기저귀 종류)
         if(keyword) {
           const match = String(r[2]).toLowerCase().includes(keyword) || 
                         String(r[5]).toLowerCase().includes(keyword) || 
@@ -364,9 +386,7 @@
         statContent.innerHTML = '조건에 일치하는 데이터가 없습니다.'; return;
       }
 
-      // 총계 표시
       let html = `<div class="stat-summary">총 기저귀 사용량: ${filteredData.length}개 검색됨</div>`;
-
       const statType = document.getElementById('statType').value;
       const detailStyle = 'margin-bottom: 10px; background: #fff; padding: 12px; border: 1px solid #ddd; border-radius: 5px;';
       const summaryStyle = 'font-weight: bold; font-size: 1.05em; cursor: pointer; outline: none;';
@@ -376,7 +396,7 @@
         filteredData.forEach(item => {
           const r = item.rowData;
           const dept = r[2] || '미지정 부서';
-          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호)`;
+          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호)`; // 항상 통일된 환자명 표기
           const diaperInfo = `[${r[8]}] ${r[9]}`;
           if (!grouped[dept]) grouped[dept] = {};
           if (!grouped[dept][patientInfo]) grouped[dept][patientInfo] = {};
@@ -396,23 +416,50 @@
         }
       } 
       else if (statType === 'patient') {
+        // 환자별 통계 개편 (총합계 상단 배치 및 상세 리스트업)
         const grouped = {};
         filteredData.forEach(item => {
           const r = item.rowData;
-          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호) - ${r[2]}`;
-          const diaperInfo = `[${r[8]}] ${r[9]}`;
-          if (!grouped[patientInfo]) grouped[patientInfo] = {};
-          grouped[patientInfo][diaperInfo] = (grouped[patientInfo][diaperInfo] || 0) + 1;
+          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호)`; // 항상 통일된 환자명 표기 (부서 제외하여 그룹핑)
+          const fDate = safeFormatDate(r[0]);
+          
+          // 동일한 기저귀, 날짜, 부서, 직원의 내역을 합산하기 위한 고유키
+          const recordKey = `${r[8]}|${r[9]}|${fDate}|${r[2]}|${r[4]}`;
+          
+          if (!grouped[patientInfo]) grouped[patientInfo] = { total: 0, items: {} };
+          if (!grouped[patientInfo].items[recordKey]) {
+            grouped[patientInfo].items[recordKey] = {
+              category: r[8], type: r[9], date: fDate, dept: r[2], staff: r[4], count: 0
+            };
+          }
+          grouped[patientInfo].items[recordKey].count += 1;
+          grouped[patientInfo].total += 1;
         });
 
         for (const patient in grouped) {
-          html += `<details style="${detailStyle} border-left: 4px solid #2ecc71;"><summary style="${summaryStyle}">🧑 ${patient}</summary><ul style="margin-top:10px; padding-left: 20px; background: #f9f9f9; padding: 10px; border-radius: 5px;">`;
-          let patientTotal = 0;
-          for (const diaper in grouped[patient]) {
-            html += `<li>${diaper}: <b style="color:#e74c3c;">${grouped[patient][diaper]}개</b></li>`;
-            patientTotal += grouped[patient][diaper];
+          html += `<details style="${detailStyle} border-left: 4px solid #2ecc71;">
+            <summary style="${summaryStyle}">🧑 ${patient}</summary>
+            
+            <div style="margin-top:10px; padding: 10px; background: #e8f8f5; border-radius: 5px; font-size: 1.05em; font-weight:bold; color:#27ae60; text-align:center;">
+               해당 환자 총 기저귀 사용량: ${grouped[patient].total}개
+            </div>
+            
+            <ul style="margin-top:10px; padding-left: 0; list-style-type: none;">`;
+          
+          const items = grouped[patient].items;
+          for (const key in items) {
+            const info = items[key];
+            // 요청하신 순서: 기저귀 구분별-종류별-갯수-사용 날짜- 입력 부서- 입력 직원 이름
+            html += `<li style="background: #f9f9f9; padding: 10px; border-radius: 5px; margin-bottom: 8px; border: 1px solid #eee;">
+              <span style="display:block; font-weight:bold; color:#2c3e50; margin-bottom: 5px;">
+                [${info.category}] ${info.type} <span style="color:#e74c3c;">- ${info.count}개</span>
+              </span>
+              <span style="font-size:0.85em; color:#7f8c8d;">
+                📅 ${info.date} | 🏢 ${info.dept} | 👤 ${info.staff}
+              </span>
+            </li>`;
           }
-          html += `<li style="margin-top:5px; border-top:1px dashed #ccc; padding-top:5px;">환자 총 사용량: <b style="color:blue;">${patientTotal}개</b></li></ul></details>`;
+          html += `</ul></details>`;
         }
       } 
       else if (statType === 'diaper') {
@@ -420,7 +467,7 @@
         filteredData.forEach(item => {
           const r = item.rowData;
           const diaperInfo = `[${r[8]}] ${r[9]}`;
-          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호) - ${r[2]}`;
+          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호)`; // 항상 통일된 환자명 표기
           if (!grouped[diaperInfo]) grouped[diaperInfo] = {};
           grouped[diaperInfo][patientInfo] = (grouped[diaperInfo][patientInfo] || 0) + 1;
         });
@@ -429,15 +476,16 @@
           html += `<details style="${detailStyle} border-left: 4px solid #f39c12;"><summary style="${summaryStyle}">📦 ${diaper}</summary><ul style="margin-top:10px; padding-left: 20px; background: #f9f9f9; padding: 10px; border-radius: 5px;">`;
           let diaperTotal = 0;
           for (const patient in grouped[diaper]) {
-            html += `<li>${patient}: <b style="color:#e74c3c;">${grouped[diaper][patient]}개</b></li>`;
+            html += `<li style="margin-bottom:5px;">${patient}: <b style="color:#e74c3c;">${grouped[diaper][patient]}개</b></li>`;
             diaperTotal += grouped[diaper][patient];
           }
-          html += `<li style="margin-top:5px; border-top:1px dashed #ccc; padding-top:5px;">해당 기저귀 총 사용량: <b style="color:blue;">${diaperTotal}개</b></li></ul></details>`;
+          html += `<li style="margin-top:5px; border-top:1px dashed #ccc; padding-top:5px; font-weight:bold;">해당 기저귀 총 사용량: <span style="color:blue;">${diaperTotal}개</span></li></ul></details>`;
         }
       }
       statContent.innerHTML = html;
     }
   </script>
 </body>
+</html>
 </html>
 
