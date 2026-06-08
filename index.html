@@ -213,11 +213,10 @@
       }
     }
 
-    // 날짜 및 시간 깔끔하게 정리하는 헬퍼 함수 추가
     function safeFormatDate(val) {
       if (!val) return "";
       let s = String(val);
-      if (s.includes("T")) return s.split("T")[0]; // YYYY-MM-DD 만 추출
+      if (s.includes("T")) return s.split("T")[0];
       return s;
     }
 
@@ -281,7 +280,6 @@
         });
     }
 
-    // 내 기록 수정 목록 렌더링
     function loadMyRecords() {
       const myName = document.getElementById('searchMyName').value.trim();
       if(!myName) return alert("이름을 입력하세요!");
@@ -304,7 +302,6 @@
             const fDate = safeFormatDate(r[0]);
             const fTime = safeFormatTime(r[1]);
             
-            // 직관적인 리스트업 반영
             html += `<div class="record-card">
               <div class="record-line"><strong>📅 날짜/시간</strong> ${fDate} ${fTime}</div>
               <div class="record-line"><strong>🧑 환자</strong> ${r[5]} (No.${r[6]}, ${r[7]}호)</div>
@@ -320,7 +317,7 @@
     function editRecord(item) {
       const r = item.rowData;
       document.getElementById('editRowIdx').value = item.rowIdx;
-      document.getElementById('date').value = safeFormatDate(r[0]); // 시간형식 정리하여 삽입
+      document.getElementById('date').value = safeFormatDate(r[0]); 
       document.getElementById('time').value = safeFormatTime(r[1]);
       document.getElementById('department').value = r[2];
       document.getElementById('staffType').value = r[3];
@@ -368,7 +365,7 @@
 
       let filteredData = window.cachedData.filter(item => {
         const r = item.rowData;
-        const fDate = safeFormatDate(r[0]); // 필터링 시 깔끔한 날짜로 비교
+        const fDate = safeFormatDate(r[0]); 
         if(startDate && fDate < startDate) return false;
         if(endDate && fDate > endDate) return false;
         
@@ -396,7 +393,7 @@
         filteredData.forEach(item => {
           const r = item.rowData;
           const dept = r[2] || '미지정 부서';
-          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호)`; // 항상 통일된 환자명 표기
+          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호)`;
           const diaperInfo = `[${r[8]}] ${r[9]}`;
           if (!grouped[dept]) grouped[dept] = {};
           if (!grouped[dept][patientInfo]) grouped[dept][patientInfo] = {};
@@ -404,7 +401,8 @@
         });
 
         for (const dept in grouped) {
-          html += `<details open style="${detailStyle} border-left: 4px solid #3498db;"><summary style="${summaryStyle}">🏢 ${dept}</summary><div style="margin-top:10px; padding-left: 10px;">`;
+          // 수정: open 속성 제거 (기본 접힘 상태)
+          html += `<details style="${detailStyle} border-left: 4px solid #3498db;"><summary style="${summaryStyle}">🏢 ${dept}</summary><div style="margin-top:10px; padding-left: 10px;">`;
           for (const patient in grouped[dept]) {
             html += `<div style="margin-bottom: 12px; background: #f9f9f9; padding: 10px; border-radius: 5px;"><strong>🧑 ${patient}</strong><ul style="margin: 5px 0 0 0; padding-left: 20px;">`;
             for (const diaper in grouped[dept][patient]) {
@@ -416,14 +414,12 @@
         }
       } 
       else if (statType === 'patient') {
-        // 환자별 통계 개편 (총합계 상단 배치 및 상세 리스트업)
         const grouped = {};
         filteredData.forEach(item => {
           const r = item.rowData;
-          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호)`; // 항상 통일된 환자명 표기 (부서 제외하여 그룹핑)
+          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호)`; 
           const fDate = safeFormatDate(r[0]);
           
-          // 동일한 기저귀, 날짜, 부서, 직원의 내역을 합산하기 위한 고유키
           const recordKey = `${r[8]}|${r[9]}|${fDate}|${r[2]}|${r[4]}`;
           
           if (!grouped[patientInfo]) grouped[patientInfo] = { total: 0, items: {} };
@@ -437,6 +433,7 @@
         });
 
         for (const patient in grouped) {
+          // 수정: open 속성 없음 (기본 접힘 상태)
           html += `<details style="${detailStyle} border-left: 4px solid #2ecc71;">
             <summary style="${summaryStyle}">🧑 ${patient}</summary>
             
@@ -449,7 +446,6 @@
           const items = grouped[patient].items;
           for (const key in items) {
             const info = items[key];
-            // 요청하신 순서: 기저귀 구분별-종류별-갯수-사용 날짜- 입력 부서- 입력 직원 이름
             html += `<li style="background: #f9f9f9; padding: 10px; border-radius: 5px; margin-bottom: 8px; border: 1px solid #eee;">
               <span style="display:block; font-weight:bold; color:#2c3e50; margin-bottom: 5px;">
                 [${info.category}] ${info.type} <span style="color:#e74c3c;">- ${info.count}개</span>
@@ -463,23 +459,44 @@
         }
       } 
       else if (statType === 'diaper') {
+        // 수정: 3. 기저귀 종류별 통계 (기저귀 먼저 -> 부서, 환자, 병실 순으로 나열)
         const grouped = {};
         filteredData.forEach(item => {
           const r = item.rowData;
           const diaperInfo = `[${r[8]}] ${r[9]}`;
-          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호)`; // 항상 통일된 환자명 표기
-          if (!grouped[diaperInfo]) grouped[diaperInfo] = {};
-          grouped[diaperInfo][patientInfo] = (grouped[diaperInfo][patientInfo] || 0) + 1;
+          
+          // 동일한 환자 및 부서를 하나로 묶기 위한 키
+          const detailKey = `${r[2]}|${r[5]}|${r[6]}|${r[7]}`; 
+          
+          if (!grouped[diaperInfo]) grouped[diaperInfo] = { total: 0, items: {} };
+          if (!grouped[diaperInfo].items[detailKey]) {
+            grouped[diaperInfo].items[detailKey] = {
+              dept: r[2] || '미지정',
+              name: r[5],
+              id: r[6],
+              room: r[7],
+              count: 0
+            };
+          }
+          grouped[diaperInfo].items[detailKey].count += 1;
+          grouped[diaperInfo].total += 1;
         });
 
         for (const diaper in grouped) {
-          html += `<details style="${detailStyle} border-left: 4px solid #f39c12;"><summary style="${summaryStyle}">📦 ${diaper}</summary><ul style="margin-top:10px; padding-left: 20px; background: #f9f9f9; padding: 10px; border-radius: 5px;">`;
-          let diaperTotal = 0;
-          for (const patient in grouped[diaper]) {
-            html += `<li style="margin-bottom:5px;">${patient}: <b style="color:#e74c3c;">${grouped[diaper][patient]}개</b></li>`;
-            diaperTotal += grouped[diaper][patient];
+          // 수정: open 속성 없음 (기본 접힘 상태)
+          html += `<details style="${detailStyle} border-left: 4px solid #f39c12;">
+            <summary style="${summaryStyle}">📦 ${diaper} <span style="color:#e74c3c; font-size:0.9em; font-weight:normal;">(총 ${grouped[diaper].total}개)</span></summary>
+            <ul style="margin-top:10px; padding-left: 0; list-style-type: none;">`;
+          
+          const items = grouped[diaper].items;
+          for (const key in items) {
+            const info = items[key];
+            // 출력 순서: 부서, 환자 이름, 환자 번호, 병실, 해당 기저귀 종류 총 합계
+            html += `<li style="background: #f9f9f9; padding: 10px; border-radius: 5px; margin-bottom: 5px; border: 1px solid #eee; font-size: 0.95em;">
+              🏢 <strong>부서:</strong> ${info.dept} | 🧑 <strong>환자:</strong> ${info.name} (No.${info.id}, ${info.room}호) | <strong>합계:</strong> <b style="color:#e74c3c;">${info.count}개</b>
+            </li>`;
           }
-          html += `<li style="margin-top:5px; border-top:1px dashed #ccc; padding-top:5px; font-weight:bold;">해당 기저귀 총 사용량: <span style="color:blue;">${diaperTotal}개</span></li></ul></details>`;
+          html += `</ul></details>`;
         }
       }
       statContent.innerHTML = html;
@@ -487,5 +504,3 @@
   </script>
 </body>
 </html>
-</html>
-
