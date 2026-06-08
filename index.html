@@ -1,279 +1,442 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>요양병원 기저귀 사용 관리</title>
-    <style>
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #2c3e50; }
-        .tabs { display: flex; margin-bottom: 20px; }
-        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; background: #ecf0f1; border: 1px solid #bdc3c7; }
-        .tab.active { background: #3498db; color: white; font-weight: bold; border-color: #3498db; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #2ecc71; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        button:hover { background-color: #27ae60; }
-        .section { display: none; }
-        .section.active { display: block; }
-        #loading { display: none; text-align: center; color: #e74c3c; font-weight: bold; margin-top: 10px; }
-        .stat-box { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-left: 4px solid #3498db; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>요양병원 기저귀 사용 관리</title>
+  <style>
+    body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+    .container { max-width: 700px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #2c3e50; }
+    .tabs { display: flex; margin-bottom: 20px; }
+    .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; background: #ecf0f1; border: 1px solid #bdc3c7; }
+    .tab.active { background: #3498db; color: white; font-weight: bold; border-color: #3498db; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; font-size: 0.9em; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; background-color: #2ecc71; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    button:hover { background-color: #27ae60; }
+    button.edit-btn { background-color: #f39c12; padding: 8px; font-size: 14px; margin-top: 5px; }
+    .section { display: none; }
+    .section.active { display: block; }
+    #loading { display: none; text-align: center; color: #e74c3c; font-weight: bold; margin-top: 10px; }
+    .filter-box { background: #e8f4f8; padding: 15px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #bce8f1; }
+    .filter-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .filter-row > div { flex: 1; }
+    .stat-summary { font-size: 1.1em; font-weight: bold; color: #c0392b; margin-bottom: 10px; padding: 10px; background: #fadbd8; border-radius: 5px; text-align: center; }
+  </style>
 </head>
 <body>
-
-<div class="container">
-    <h2>기저귀 사용 관리</h2>
+  <div class="container">
+    <h2>요양병원 기저귀 사용 관리</h2>
     
     <div class="tabs">
-        <div class="tab active" onclick="switchTab('input')">입력 (직원용)</div>
-        <div class="tab" onclick="switchTab('admin'); loadStats();">통계 (관리자용)</div>
+      <div class="tab active" onclick="switchTab('input')">입력 (직원용)</div>
+      <div class="tab" onclick="switchTab('edit');">내 기록 수정</div>
+      <div class="tab" onclick="switchTab('admin'); loadStats();">통계 (관리자용)</div>
     </div>
 
     <div id="inputSection" class="section active">
-        <form id="diaperForm">
-            <div class="form-group"><label>사용 날짜</label><input type="date" id="date" required></div>
-            <div class="form-group"><label>사용 시간</label><input type="time" id="time" required></div>
-            <div class="form-group"><label>사용 부서</label><input type="text" id="department" placeholder="예: 3병동" required></div>
-            <div class="form-group"><label>입력 직원 유형</label>
-                <select id="staffType" required>
-                    <option value="">선택하세요</option>
-                    <option value="간호사">간호사</option>
-                    <option value="간호조무사">간호조무사</option>
-                    <option value="요양보호사">요양보호사</option>
-                </select>
-            </div>
-            <div class="form-group"><label>입력 직원 이름</label><input type="text" id="staffName" required></div>
-            <hr>
-            <div class="form-group"><label>사용 환자 이름</label><input type="text" id="patientName" required></div>
-            <div class="form-group"><label>사용 환자 번호 (차트번호)</label><input type="text" id="patientId" required></div>
-            <div class="form-group"><label>사용 환자 병실</label><input type="text" id="room" placeholder="예: 301호" required></div>
-            <hr>
-            <div class="form-group"><label>기저귀 구분</label>
-                <select id="category" onchange="updateTypes()" required>
-                    <option value="">선택하세요</option>
-                    <option value="팬티형 기저귀">팬티형 기저귀</option>
-                    <option value="겉 기저귀">겉 기저귀</option>
-                    <option value="속 기저귀">속 기저귀</option>
-                    <option value="위생용 깔개 매트">위생용 깔개 매트</option>
-                </select>
-            </div>
-            <div class="form-group"><label>기저귀 종류</label>
-                <select id="type" required>
-                    <option value="">구분을 먼저 선택하세요</option>
-                </select>
-            </div>
-            <button type="submit">제출하기</button>
-            <div id="loading">데이터를 저장 중입니다...</div>
-        </form>
+      <form id="diaperForm">
+        <input type="hidden" id="editRowIdx" value=""> <div class="form-group"><label>사용 날짜</label><input type="date" id="date" required></div>
+        <div class="form-group"><label>사용 시간</label><input type="time" id="time" required></div>
+        
+        <div class="form-group">
+          <label>사용 부서</label>
+          <select id="department" required>
+            <option value="">선택하세요</option>
+            <option value="2A">2A</option><option value="2B">2B</option>
+            <option value="3A">3A</option><option value="3B">3B</option>
+            <option value="5병동">5병동</option><option value="재활치료실">재활치료실</option>
+            <option value="외래">외래</option><option value="원무과">원무과</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>입력 직원 유형</label>
+          <select id="staffType" required>
+            <option value="">선택하세요</option>
+            <option value="치료사">치료사</option><option value="병동 인력">병동 인력</option>
+            <option value="행정 인력">행정 인력</option><option value="간병사">간병사</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>입력 직원 이름 (한글만)</label>
+          <input type="text" id="staffName" pattern="^[가-힣]+$" title="한글만 입력 가능" required>
+        </div>
+        <hr>
+        
+        <div class="form-group">
+          <label>사용 환자 이름 (한글만)</label>
+          <input type="text" id="patientName" pattern="^[가-힣]+$" title="한글만 입력 가능" required>
+        </div>
+        <div class="form-group">
+          <label>사용 환자 번호 (최대 6자리 숫자)</label>
+          <input type="text" id="patientId" pattern="^[0-9]{1,6}$" maxlength="6" required>
+        </div>
+        <div class="form-group">
+          <label>사용 환자 병실 (최대 3자리 숫자)</label>
+          <input type="text" id="room" pattern="^[0-9]{1,3}$" maxlength="3" required>
+        </div>
+        <hr>
+        
+        <div class="form-group">
+          <label>기저귀 구분</label>
+          <select id="category" onchange="updateTypes()" required>
+            <option value="">선택하세요</option>
+            <option value="팬티형 기저귀">팬티형 기저귀</option>
+            <option value="겉 기저귀">겉 기저귀</option>
+            <option value="속 기저귀">속 기저귀</option>
+            <option value="위생용 깔개 매트">위생용 깔개 매트</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>기저귀 종류</label>
+          <select id="type" onchange="checkCustomType()" required>
+            <option value="">구분을 먼저 선택하세요</option>
+          </select>
+          <input type="text" id="customType" style="display:none; margin-top:10px;" placeholder="자가 입력 내용을 적어주세요">
+        </div>
+        
+        <button type="submit" id="submitBtn">제출하기</button>
+        <button type="button" id="cancelEditBtn" style="display:none; background-color:#95a5a6;" onclick="cancelEdit()">수정 취소</button>
+        <div id="loading">데이터를 처리 중입니다...</div>
+      </form>
+    </div>
+
+    <div id="editSection" class="section">
+      <div class="filter-box">
+        <label>본인 이름 검색 (최근 기록을 불러와 수정할 수 있습니다)</label>
+        <div class="filter-row">
+          <input type="text" id="searchMyName" placeholder="입력했던 직원 이름">
+          <button type="button" onclick="loadMyRecords()" style="margin-top:0;">검색</button>
+        </div>
+      </div>
+      <div id="myRecordsContent">검색 결과가 여기에 표시됩니다.</div>
     </div>
 
     <div id="adminSection" class="section">
-        <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 15px;">※ 최근 입력된 데이터를 기준으로 상세 통계를 제공합니다.</p>
-        
-        <select id="statType" onchange="renderStats(window.cachedData)" style="margin-bottom: 15px; padding: 10px; width: 100%; font-weight: bold; background-color: #e8f4f8; border: 1px solid #3498db;">
-            <option value="dept">1. 부서별 통계 (부서 ➔ 환자 ➔ 기저귀)</option>
-            <option value="patient">2. 환자별 통계 (환자 ➔ 기저귀)</option>
-            <option value="diaper">3. 기저귀 종류별 통계 (기저귀 ➔ 환자)</option>
-        </select>
+      <div class="filter-box">
+        <div class="filter-row">
+          <div><label>시작일</label><input type="date" id="startDate"></div>
+          <div><label>종료일</label><input type="date" id="endDate"></div>
+        </div>
+        <div class="form-group">
+          <label>통합 검색 (부서, 환자이름, 병실, 기저귀 종류)</label>
+          <input type="text" id="searchKeyword" placeholder="검색어를 입력하세요">
+        </div>
+        <button type="button" onclick="renderStats()">조건 적용하여 조회하기</button>
+      </div>
 
-        <div id="statContent">데이터를 불러오는 중입니다...</div>
+      <select id="statType" onchange="renderStats()" style="margin-bottom: 15px; padding: 10px; width: 100%; font-weight: bold; background-color: #fff; border: 2px solid #3498db;">
+        <option value="dept">1. 부서별 통계 (부서 ➔ 환자 ➔ 기저귀)</option>
+        <option value="patient">2. 환자별 통계 (환자 ➔ 기저귀)</option>
+        <option value="diaper">3. 기저귀 종류별 통계 (기저귀 ➔ 환자)</option>
+      </select>
+      
+      <div id="statContent">데이터를 불러오는 중입니다...</div>
     </div>
-</div>
 
-<script>
-    // ★★★ 구글 앱스 스크립트 웹 앱 URL을 아래에 반드시 붙여넣으세요 ★★★
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKh9Ndh3jOqJ0fwAGLUbU91J1yteVvO8S71SeU6iH5KtAUJEqVSPtiM9q6EYJxZdwn/exec';
+  </div>
 
-    // 오늘 날짜 및 시간 자동 설정
+  <script>
+    // ★★★ 새로 배포한 웹 앱 URL을 반드시 입력하세요 ★★★
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKh9Ndh3jOqJ0fwAGLUbU91J1yteVvO8S71SeU6iH5KtAUJEqVSPtiM9q6EYJxZdwn/exec'; 
+    window.cachedData = []; // 데이터 캐싱용 전역 변수
+
+    // 초기 날짜/시간 설정
     document.getElementById('date').valueAsDate = new Date();
     document.getElementById('time').value = new Date().toTimeString().slice(0,5);
 
-    // 기저귀 종류 데이터 매핑
+    // 기저귀 종류 매핑 (자가 옵션 추가)
     const diaperData = {
-        "팬티형 기저귀": [
-            "국산 서림 시그널라인 언더웨어 대형 흡수율 800 대형",
-            "국산 서림 시그널라인 언더웨어 특대형 흡수율 880 특대형",
-            "타이완 테나 프로스킨 언더웨어 중형 흡수율 1,000 중형",
-            "태국 라이프리 안심 언더웨어 중형 흡수율 850 중형",
-            "태국 라이프리 안심 언더웨어 대형 흡수율 850 중형",
-            "국산 유한킴벌리 디펜드 스타일 언더웨어 중형 흡수율 400 중형",
-            "중국 휴먼스토리 팬티 언더웨어 대형 흡수율 1200 대형",
-            "국산 유한킴벌리 디펜드 안심 언더웨어 대형 흡수율 1200 대형"
-        ],
-        "겉 기저귀": ["중국 이지스 골드 성인용 기저귀 중형 흡수율 750 중형"],
-        "속 기저귀": ["중국 포인트 일자형 속기저귀 보통 사이즈 보통"],
-        "위생용 깔개 매트": ["중국 포인트 위생깔개 매트 대형 사이즈 대형"]
+      "팬티형 기저귀": [
+        "국산 서림 시그널라인 언더웨어 대형 흡수율 800 대형", "국산 서림 시그널라인 언더웨어 특대형 흡수율 880 특대형",
+        "타이완 테나 프로스킨 언더웨어 중형 흡수율 1,000 중형", "태국 라이프리 안심 언더웨어 중형 흡수율 850 중형",
+        "태국 라이프리 안심 언더웨어 대형 흡수율 850 중형", "국산 유한킴벌리 디펜드 스타일 언더웨어 중형 흡수율 400 중형",
+        "중국 휴먼스토리 팬티 언더웨어 대형 흡수율 1200 대형", "국산 유한킴벌리 디펜드 안심 언더웨어 대형 흡수율 1200 대형", "자가"
+      ],
+      "겉 기저귀": ["중국 이지스 골드 성인용 기저귀 중형 흡수율 750 중형", "자가"],
+      "속 기저귀": ["중국 포인트 일자형 속기저귀 보통 사이즈 보통", "자가"],
+      "위생용 깔개 매트": ["중국 포인트 위생깔개 매트 대형 사이즈 대형", "자가"]
     };
 
     function updateTypes() {
-        const category = document.getElementById("category").value;
-        const typeSelect = document.getElementById("type");
-        typeSelect.innerHTML = '<option value="">선택하세요</option>';
-        if (diaperData[category]) {
-            diaperData[category].forEach(item => {
-                const option = document.createElement("option");
-                option.value = item;
-                option.text = item;
-                typeSelect.add(option);
-            });
-        }
-    }
+      const category = document.getElementById("category").value;
+      const typeSelect = document.getElementById("type");
+      typeSelect.innerHTML = '<option value="">선택하세요</option>';
+      document.getElementById('customType').style.display = 'none';
+      document.getElementById('customType').required = false;
 
-    // 탭 전환 로직
-    function switchTab(tabName) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        
-        if(tabName === 'input') {
-            document.querySelectorAll('.tab')[0].classList.add('active');
-            document.getElementById('inputSection').classList.add('active');
-        } else {
-            document.querySelectorAll('.tab')[1].classList.add('active');
-            document.getElementById('adminSection').classList.add('active');
-        }
-    }
-
-    // 데이터 제출 로직
-    document.getElementById('diaperForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        document.getElementById('loading').style.display = 'block';
-
-        const data = {
-            date: document.getElementById('date').value,
-            time: document.getElementById('time').value,
-            department: document.getElementById('department').value,
-            staffType: document.getElementById('staffType').value,
-            staffName: document.getElementById('staffName').value,
-            patientName: document.getElementById('patientName').value,
-            patientId: document.getElementById('patientId').value,
-            room: document.getElementById('room').value,
-            category: document.getElementById('category').value,
-            type: document.getElementById('type').value
-        };
-
-        fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(result => {
-            alert('성공적으로 저장되었습니다!');
-            document.getElementById('diaperForm').reset();
-            document.getElementById('date').valueAsDate = new Date();
-            document.getElementById('time').value = new Date().toTimeString().slice(0,5);
-        })
-        .catch(error => {
-            alert('저장 중 오류가 발생했습니다. 다시 시도해주세요.');
-        })
-        .finally(() => {
-            document.getElementById('loading').style.display = 'none';
+      if (diaperData[category]) {
+        diaperData[category].forEach(item => {
+          const option = document.createElement("option");
+          option.value = item;
+          option.text = item;
+          typeSelect.add(option);
         });
+      }
+    }
+
+    function checkCustomType() {
+      const typeVal = document.getElementById('type').value;
+      const customInput = document.getElementById('customType');
+      if(typeVal === '자가') {
+        customInput.style.display = 'block';
+        customInput.required = true;
+      } else {
+        customInput.style.display = 'none';
+        customInput.required = false;
+      }
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+      if(tabName === 'input') {
+        document.querySelectorAll('.tab')[0].classList.add('active');
+        document.getElementById('inputSection').classList.add('active');
+      } else if (tabName === 'edit') {
+        document.querySelectorAll('.tab')[1].classList.add('active');
+        document.getElementById('editSection').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab')[2].classList.add('active');
+        document.getElementById('adminSection').classList.add('active');
+      }
+    }
+
+    // 폼 제출 로직 (저장 및 수정 공통)
+    document.getElementById('diaperForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      document.getElementById('loading').style.display = 'block';
+      
+      let finalType = document.getElementById('type').value;
+      if (finalType === '자가') {
+        finalType = "[자가] " + document.getElementById('customType').value;
+      }
+
+      const rowIdx = document.getElementById('editRowIdx').value;
+      const data = {
+        date: document.getElementById('date').value,
+        time: document.getElementById('time').value,
+        department: document.getElementById('department').value,
+        staffType: document.getElementById('staffType').value,
+        staffName: document.getElementById('staffName').value,
+        patientName: document.getElementById('patientName').value,
+        patientId: document.getElementById('patientId').value,
+        room: document.getElementById('room').value,
+        category: document.getElementById('category').value,
+        type: finalType,
+        action: rowIdx ? 'update' : 'insert',
+        rowIdx: rowIdx
+      };
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(result => {
+        alert(rowIdx ? '성공적으로 수정되었습니다!' : '성공적으로 저장되었습니다!');
+        cancelEdit(); // 폼 초기화
+      })
+      .catch(error => { alert('오류가 발생했습니다. 다시 시도해주세요.'); })
+      .finally(() => { document.getElementById('loading').style.display = 'none'; });
     });
 
-    // 전역 변수로 데이터를 저장해두어 탭을 바꿀 때마다 새로고침하지 않도록 함
-    window.cachedData = []; 
-
+    // 데이터 호출 (통계 및 수정용)
     function loadStats() {
-        const statContent = document.getElementById('statContent');
-        statContent.innerHTML = '<div style="text-align:center; padding:20px;">데이터를 불러오는 중입니다...⏳</div>';
-
-        fetch(SCRIPT_URL)
-        .then(response => response.json())
+      document.getElementById('statContent').innerHTML = '<div style="text-align:center;">⏳ 데이터를 불러오는 중...</div>';
+      fetch(SCRIPT_URL)
+        .then(res => res.json())
         .then(data => {
-            window.cachedData = data;
-            renderStats(data);
+          window.cachedData = data;
+          renderStats();
         })
         .catch(err => {
-            statContent.innerHTML = '<div style="color:red; text-align:center;">통계를 불러오는데 실패했습니다.</div>';
+          document.getElementById('statContent').innerHTML = '<div style="color:red; text-align:center;">실패했습니다.</div>';
         });
     }
 
-    // 조건 8번을 완벽히 구현한 렌더링 함수
-    function renderStats(data) {
-        const statContent = document.getElementById('statContent');
-        if (!data || data.length === 0) {
-            statContent.innerHTML = '입력된 데이터가 없습니다.';
-            return;
-        }
-
-        const statType = document.getElementById('statType').value;
-        let html = '';
-
-        // 디테일 태그용 공통 스타일
-        const detailStyle = 'margin-bottom: 10px; background: #fff; padding: 12px; border: 1px solid #ddd; border-radius: 5px;';
-        const summaryStyle = 'font-weight: bold; font-size: 1.05em; cursor: pointer; outline: none;';
-
-        if (statType === 'dept') {
-            // 8-1) 부서별 통계: 부서 -> 환자정보 -> 기저귀
-            const grouped = {};
-            data.forEach(row => {
-                const dept = row[2] || '미지정 부서';
-                const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]})`; // 이름 (번호, 병실)
-                const diaperInfo = `[${row[8]}] ${row[9]}`; // [구분] 종류
-                
-                if (!grouped[dept]) grouped[dept] = {};
-                if (!grouped[dept][patientInfo]) grouped[dept][patientInfo] = {};
-                grouped[dept][patientInfo][diaperInfo] = (grouped[dept][patientInfo][diaperInfo] || 0) + 1;
-            });
-
-            for (const dept in grouped) {
-                html += `<details open style="${detailStyle} border-left: 4px solid #3498db;"><summary style="${summaryStyle}">🏢 ${dept}</summary><div style="margin-top:10px; padding-left: 10px;">`;
-                for (const patient in grouped[dept]) {
-                    html += `<div style="margin-bottom: 12px; background: #f9f9f9; padding: 10px; border-radius: 5px;"><strong>🧑 ${patient}</strong><ul style="margin: 5px 0 0 0; padding-left: 20px;">`;
-                    for (const diaper in grouped[dept][patient]) {
-                        html += `<li style="margin-bottom:3px; font-size: 0.9em;">${diaper}: <b style="color:#e74c3c;">${grouped[dept][patient][diaper]}개</b></li>`;
-                    }
-                    html += `</ul></div>`;
-                }
-                html += `</div></details>`;
-            }
-        } 
-        else if (statType === 'patient') {
-            // 8-2) 환자별 통계: 환자정보 -> 기저귀
-            const grouped = {};
-            data.forEach(row => {
-                const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]})`;
-                const diaperInfo = `[${row[8]}] ${row[9]}`;
-                
-                if (!grouped[patientInfo]) grouped[patientInfo] = {};
-                grouped[patientInfo][diaperInfo] = (grouped[patientInfo][diaperInfo] || 0) + 1;
-            });
-
-            for (const patient in grouped) {
-                html += `<details style="${detailStyle} border-left: 4px solid #2ecc71;"><summary style="${summaryStyle}">🧑 ${patient}</summary><ul style="margin-top:10px; padding-left: 20px; background: #f9f9f9; padding: 10px 10px 10px 30px; border-radius: 5px;">`;
-                for (const diaper in grouped[patient]) {
-                    html += `<li style="margin-bottom:5px;">${diaper}: <b style="color:#e74c3c;">${grouped[patient][diaper]}개</b></li>`;
-                }
-                html += `</ul></details>`;
-            }
-        }
-        else if (statType === 'diaper') {
-            // 8-3) 기저귀 구분-종류별 통계: 기저귀 -> 환자정보
-            const grouped = {};
-            data.forEach(row => {
-                const diaperInfo = `[${row[8]}] ${row[9]}`;
-                const patientInfo = `${row[5]} (No.${row[6]}, ${row[7]}) - ${row[2]}`; // 이름 (번호, 병실) - 부서
-                
-                if (!grouped[diaperInfo]) grouped[diaperInfo] = {};
-                grouped[diaperInfo][patientInfo] = (grouped[diaperInfo][patientInfo] || 0) + 1;
-            });
-
-            for (const diaper in grouped) {
-                html += `<details style="${detailStyle} border-left: 4px solid #f39c12;"><summary style="${summaryStyle}">📦 ${diaper}</summary><ul style="margin-top:10px; padding-left: 20px; background: #f9f9f9; padding: 10px 10px 10px 30px; border-radius: 5px;">`;
-                for (const patient in grouped[diaper]) {
-                    html += `<li style="margin-bottom:5px;">${patient}: <b style="color:#e74c3c;">${grouped[diaper][patient]}개</b> 사용</li>`;
-                }
-                html += `</ul></details>`;
-            }
-        }
-
-        html += '<br><a href="https://docs.google.com/spreadsheets" target="_blank" style="display:block; text-align:center; padding:12px; background:#ecf0f1; border-radius:5px; text-decoration:none; color:#2c3e50; font-weight:bold;">🔗 구글 시트 원본 데이터 열기</a>';
-        statContent.innerHTML = html;
+    // 본인 기록 불러오기 (수정 기능용)
+    function loadMyRecords() {
+      const myName = document.getElementById('searchMyName').value.trim();
+      if(!myName) return alert("이름을 입력하세요!");
+      
+      const content = document.getElementById('myRecordsContent');
+      content.innerHTML = '⏳ 검색 중...';
+      
+      fetch(SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
+          window.cachedData = data;
+          const myData = data.filter(item => item.rowData[4] === myName);
+          if(myData.length === 0) {
+            content.innerHTML = '검색된 기록이 없습니다.'; return;
+          }
+          
+          let html = '';
+          myData.forEach(item => {
+            const r = item.rowData;
+            html += `<div style="background:#fff; border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:5px;">
+              <strong>${r[0]} ${r[1]}</strong> | 환자: ${r[5]}(${r[7]}호) <br>
+              <span style="color:#7f8c8d; font-size:0.9em;">[${r[8]}] ${r[9]}</span>
+              <button class="edit-btn" onclick='editRecord(${JSON.stringify(item)})'>이 기록 수정하기</button>
+            </div>`;
+          });
+          content.innerHTML = html;
+        });
     }
-</script>
 
+    // 폼에 데이터 세팅 (수정 모드 진입)
+    function editRecord(item) {
+      const r = item.rowData;
+      document.getElementById('editRowIdx').value = item.rowIdx;
+      document.getElementById('date').value = r[0];
+      document.getElementById('time').value = r[1];
+      document.getElementById('department').value = r[2];
+      document.getElementById('staffType').value = r[3];
+      document.getElementById('staffName').value = r[4];
+      document.getElementById('patientName').value = r[5];
+      document.getElementById('patientId').value = r[6];
+      document.getElementById('room').value = r[7];
+      document.getElementById('category').value = r[8];
+      
+      updateTypes(); // 카테고리 로드
+      
+      const typeSelect = document.getElementById('type');
+      if(r[9].startsWith('[자가]')) {
+        typeSelect.value = '자가';
+        checkCustomType();
+        document.getElementById('customType').value = r[9].replace('[자가] ', '');
+      } else {
+        typeSelect.value = r[9];
+      }
+
+      document.getElementById('submitBtn').innerText = "수정 내용 저장하기";
+      document.getElementById('cancelEditBtn').style.display = 'block';
+      switchTab('input'); // 입력 탭으로 자동 이동
+    }
+
+    function cancelEdit() {
+      document.getElementById('diaperForm').reset();
+      document.getElementById('editRowIdx').value = "";
+      document.getElementById('date').valueAsDate = new Date();
+      document.getElementById('time').value = new Date().toTimeString().slice(0,5);
+      document.getElementById('submitBtn').innerText = "제출하기";
+      document.getElementById('cancelEditBtn').style.display = 'none';
+      updateTypes();
+    }
+
+    // 통계 렌더링 (필터 적용 포함)
+    function renderStats() {
+      const statContent = document.getElementById('statContent');
+      if (!window.cachedData || window.cachedData.length === 0) {
+        statContent.innerHTML = '입력된 데이터가 없습니다.'; return;
+      }
+
+      // 1. 데이터 필터링 (기간 및 검색어)
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const keyword = document.getElementById('searchKeyword').value.toLowerCase();
+
+      let filteredData = window.cachedData.filter(item => {
+        const r = item.rowData;
+        // 날짜 필터 (r[0]은 YYYY-MM-DD 형태)
+        if(startDate && r[0] < startDate) return false;
+        if(endDate && r[0] > endDate) return false;
+        
+        // 검색 필터 (부서, 환자이름, 병실, 기저귀 종류)
+        if(keyword) {
+          const match = String(r[2]).toLowerCase().includes(keyword) || 
+                        String(r[5]).toLowerCase().includes(keyword) || 
+                        String(r[7]).toLowerCase().includes(keyword) || 
+                        String(r[9]).toLowerCase().includes(keyword);
+          if(!match) return false;
+        }
+        return true;
+      });
+
+      if (filteredData.length === 0) {
+        statContent.innerHTML = '조건에 일치하는 데이터가 없습니다.'; return;
+      }
+
+      // 총계 표시
+      let html = `<div class="stat-summary">총 기저귀 사용량: ${filteredData.length}개 검색됨</div>`;
+
+      const statType = document.getElementById('statType').value;
+      const detailStyle = 'margin-bottom: 10px; background: #fff; padding: 12px; border: 1px solid #ddd; border-radius: 5px;';
+      const summaryStyle = 'font-weight: bold; font-size: 1.05em; cursor: pointer; outline: none;';
+
+      if (statType === 'dept') {
+        const grouped = {};
+        filteredData.forEach(item => {
+          const r = item.rowData;
+          const dept = r[2] || '미지정 부서';
+          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호)`;
+          const diaperInfo = `[${r[8]}] ${r[9]}`;
+          if (!grouped[dept]) grouped[dept] = {};
+          if (!grouped[dept][patientInfo]) grouped[dept][patientInfo] = {};
+          grouped[dept][patientInfo][diaperInfo] = (grouped[dept][patientInfo][diaperInfo] || 0) + 1;
+        });
+
+        for (const dept in grouped) {
+          html += `<details open style="${detailStyle} border-left: 4px solid #3498db;"><summary style="${summaryStyle}">🏢 ${dept}</summary><div style="margin-top:10px; padding-left: 10px;">`;
+          for (const patient in grouped[dept]) {
+            html += `<div style="margin-bottom: 12px; background: #f9f9f9; padding: 10px; border-radius: 5px;"><strong>🧑 ${patient}</strong><ul style="margin: 5px 0 0 0; padding-left: 20px;">`;
+            for (const diaper in grouped[dept][patient]) {
+              html += `<li style="margin-bottom:3px;">${diaper}: <b style="color:#e74c3c;">${grouped[dept][patient][diaper]}개</b></li>`;
+            }
+            html += `</ul></div>`;
+          }
+          html += `</div></details>`;
+        }
+      } 
+      else if (statType === 'patient') {
+        const grouped = {};
+        filteredData.forEach(item => {
+          const r = item.rowData;
+          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호) - ${r[2]}`;
+          const diaperInfo = `[${r[8]}] ${r[9]}`;
+          if (!grouped[patientInfo]) grouped[patientInfo] = {};
+          grouped[patientInfo][diaperInfo] = (grouped[patientInfo][diaperInfo] || 0) + 1;
+        });
+
+        for (const patient in grouped) {
+          html += `<details style="${detailStyle} border-left: 4px solid #2ecc71;"><summary style="${summaryStyle}">🧑 ${patient}</summary><ul style="margin-top:10px; padding-left: 20px; background: #f9f9f9; padding: 10px; border-radius: 5px;">`;
+          let patientTotal = 0;
+          for (const diaper in grouped[patient]) {
+            html += `<li>${diaper}: <b style="color:#e74c3c;">${grouped[patient][diaper]}개</b></li>`;
+            patientTotal += grouped[patient][diaper];
+          }
+          html += `<li style="margin-top:5px; border-top:1px dashed #ccc; padding-top:5px;">환자 총 사용량: <b style="color:blue;">${patientTotal}개</b></li></ul></details>`;
+        }
+      } 
+      else if (statType === 'diaper') {
+        const grouped = {};
+        filteredData.forEach(item => {
+          const r = item.rowData;
+          const diaperInfo = `[${r[8]}] ${r[9]}`;
+          const patientInfo = `${r[5]} (No.${r[6]}, ${r[7]}호) - ${r[2]}`;
+          if (!grouped[diaperInfo]) grouped[diaperInfo] = {};
+          grouped[diaperInfo][patientInfo] = (grouped[diaperInfo][patientInfo] || 0) + 1;
+        });
+
+        for (const diaper in grouped) {
+          html += `<details style="${detailStyle} border-left: 4px solid #f39c12;"><summary style="${summaryStyle}">📦 ${diaper}</summary><ul style="margin-top:10px; padding-left: 20px; background: #f9f9f9; padding: 10px; border-radius: 5px;">`;
+          let diaperTotal = 0;
+          for (const patient in grouped[diaper]) {
+            html += `<li>${patient}: <b style="color:#e74c3c;">${grouped[diaper][patient]}개</b></li>`;
+            diaperTotal += grouped[diaper][patient];
+          }
+          html += `<li style="margin-top:5px; border-top:1px dashed #ccc; padding-top:5px;">해당 기저귀 총 사용량: <b style="color:blue;">${diaperTotal}개</b></li></ul></details>`;
+        }
+      }
+      statContent.innerHTML = html;
+    }
+  </script>
 </body>
 </html>
